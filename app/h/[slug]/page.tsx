@@ -189,7 +189,10 @@ export default async function PublicHubPage({ params }: { params: Promise<{ slug
       </main>
 
       <footer className="text-center py-10 text-xs text-gray-300">
-        QRMagNotes
+        © 2026 QRMagNotes | Developed by{' '}
+        <a href="https://websketching.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition-colors underline">
+          Websketching
+        </a>
       </footer>
     </div>
   )
