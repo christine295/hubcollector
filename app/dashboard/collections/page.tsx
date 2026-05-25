@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/client'
 import HubCard from '@/components/HubCard'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<any[]>([])
