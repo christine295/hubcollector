@@ -102,6 +102,19 @@ export default function CollectionsPage() {
   const [confirmCollection, setConfirmCollection] = useState<any>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [editCollection, setEditCollection] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [modeFilter, setModeFilter] = useState<'all' | 'landing' | 'redirect'>('all')
+  const [privacyFilter, setPrivacyFilter] = useState<'all' | 'public' | 'unlisted' | 'private'>('all')
+
+  function hubMatches(hub: any) {
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = !q || hub.title.toLowerCase().includes(q) || hub.slug.toLowerCase().includes(q)
+    const matchesMode = modeFilter === 'all' || hub.mode === modeFilter
+    const matchesPrivacy = privacyFilter === 'all' || hub.privacy_mode === privacyFilter
+    return matchesSearch && matchesMode && matchesPrivacy
+  }
+
+  const isFiltering = searchQuery || modeFilter !== 'all' || privacyFilter !== 'all'
 
   // Fetch collections and uncategorized hubs on mount
   useEffect(() => {
@@ -196,6 +209,40 @@ export default function CollectionsPage() {
           </div>
         </div>
 
+        {/* Search & filter */}
+        <div className="mb-6 space-y-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search hubs by title or slug…"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="flex gap-2">
+            <select
+              value={modeFilter}
+              onChange={e => setModeFilter(e.target.value as any)}
+              title="Filter by mode"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+            >
+              <option value="all">All modes</option>
+              <option value="landing">Landing Page</option>
+              <option value="redirect">Redirect</option>
+            </select>
+            <select
+              value={privacyFilter}
+              onChange={e => setPrivacyFilter(e.target.value as any)}
+              title="Filter by privacy"
+              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+            >
+              <option value="all">All visibility</option>
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+        </div>
+
         <div className="mb-8 flex justify-end">
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
@@ -244,6 +291,8 @@ export default function CollectionsPage() {
               <div className="space-y-8 mb-12">
                 {collections.map((collection: any) => {
                   const isOpen = expanded[collection.id] ?? true;
+                  const matchingHubs = (collection.hubs ?? []).filter(hubMatches)
+                  if (isFiltering && matchingHubs.length === 0) return null
                   return (
                     <div key={collection.id} className="bg-white rounded-xl border border-gray-200 shadow p-5">
                       <div className="flex items-center gap-4 mb-2 justify-between">
@@ -343,8 +392,8 @@ export default function CollectionsPage() {
                       </div>
                       {isOpen && (
                         <div className="mt-4 space-y-2">
-                          {collection.hubs && collection.hubs.length > 0 ? (
-                            collection.hubs.map((hub: any) => <HubCard key={hub.id} hub={hub} />)
+                          {matchingHubs.length > 0 ? (
+                            matchingHubs.map((hub: any) => <HubCard key={hub.id} hub={hub} />)
                           ) : (
                             <div className="flex flex-col gap-2 items-start">
                               <div className="text-gray-400 text-sm">No hubs in this collection.</div>
@@ -365,25 +414,37 @@ export default function CollectionsPage() {
             )}
 
             {/* Uncategorized Hubs */}
-            {uncategorizedHubs && uncategorizedHubs.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 shadow p-5 mb-12">
-                <div className="flex items-center gap-4 mb-2 justify-between">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h2 className="font-semibold text-lg text-gray-900">Uncategorized</h2>
-                      <p className="text-gray-500 text-sm">Hubs not assigned to any collection</p>
+            {(() => {
+              const matchingUncategorized = uncategorizedHubs.filter(hubMatches)
+              if (uncategorizedHubs.length === 0) return null
+              if (isFiltering && matchingUncategorized.length === 0) return null
+              return (
+                <div className="bg-white rounded-xl border border-gray-200 shadow p-5 mb-12">
+                  <div className="flex items-center gap-4 mb-2 justify-between">
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <h2 className="font-semibold text-lg text-gray-900">Uncategorized</h2>
+                        <p className="text-gray-500 text-sm">Hubs not assigned to any collection</p>
+                      </div>
                     </div>
+                    <Link
+                      href="/dashboard/hub/new"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors ml-auto"
+                    >
+                      + Add Hub
+                    </Link>
                   </div>
-                  <Link
-                    href="/dashboard/hub/new"
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors ml-auto"
-                  >
-                    + Add Hub
-                  </Link>
+                  <div className="mt-4 space-y-2">
+                    {matchingUncategorized.map((hub: any) => <HubCard key={hub.id} hub={hub} />)}
+                  </div>
                 </div>
-                <div className="mt-4 space-y-2">
-                  {uncategorizedHubs.map((hub: any) => <HubCard key={hub.id} hub={hub} />)}
-                </div>
+              )
+            })()}
+
+            {/* No search results */}
+            {isFiltering && collections.every(c => (c.hubs ?? []).filter(hubMatches).length === 0) && uncategorizedHubs.filter(hubMatches).length === 0 && (collections.length > 0 || uncategorizedHubs.length > 0) && (
+              <div className="text-center py-12 text-gray-400 text-sm">
+                No hubs match your search.
               </div>
             )}
 

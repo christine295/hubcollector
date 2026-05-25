@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { Hub } from '@/lib/types'
 import QRButton from './QRButton'
 
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(iso))
+}
+
 export default function HubCard({ hub }: { hub: Hub }) {
   const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/h/${hub.slug}`
 
@@ -18,6 +22,9 @@ export default function HubCard({ hub }: { hub: Hub }) {
         <div>
           <h3 className="font-semibold text-gray-900">{hub.title}</h3>
           <p className="text-xs text-gray-400 font-mono mt-0.5">/h/{hub.slug}</p>
+          <p className="text-xs text-gray-300 mt-1">
+            Created {formatDate(hub.created_at)} · Updated {formatDate(hub.updated_at)}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <span
