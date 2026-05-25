@@ -124,14 +124,24 @@ export default function CollectionsPage() {
           <div className="space-y-8">
             {collections.map((collection: any) => (
               <div key={collection.id} className="bg-white rounded-xl border border-gray-200 shadow p-5">
-                <div className="flex items-center gap-4 mb-2">
-                  {collection.cover_image && (
-                    <img src={collection.cover_image} alt="cover" className="w-12 h-12 rounded object-cover" />
-                  )}
-                  <div>
-                    <h2 className="font-semibold text-lg text-gray-900">{collection.title}</h2>
-                    {collection.description && <p className="text-gray-500 text-sm">{collection.description}</p>}
+                <div className="flex items-center gap-4 mb-2 justify-between">
+                  <div className="flex items-center gap-4">
+                    {collection.cover_image && (
+                      <img src={collection.cover_image} alt="cover" className="w-12 h-12 rounded object-cover" />
+                    )}
+                    <div>
+                      <h2 className="font-semibold text-lg text-gray-900">{collection.title}</h2>
+                      {collection.description && <p className="text-gray-500 text-sm">{collection.description}</p>}
+                    </div>
                   </div>
+                  {collection.hubs && collection.hubs.length > 0 && (
+                    <Link
+                      href={`/dashboard/hub/new?collection=${collection.id}`}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors ml-auto"
+                    >
+                      + Add Hub
+                    </Link>
+                  )}
                 </div>
                 <div className="mt-4 space-y-2">
                   {collection.hubs && collection.hubs.length > 0 ? (
