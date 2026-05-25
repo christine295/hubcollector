@@ -15,13 +15,30 @@ export default async function PublicHubPage({ params }: { params: Promise<{ slug
 
   if (hub.privacy_mode === 'private') {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== hub.user_id) {
+    if (!user) {
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center px-4">
             <div className="text-5xl mb-4 select-none">&#128274;</div>
             <h1 className="text-xl font-semibold text-gray-900 mb-2">This hub is private</h1>
-            <p className="text-sm text-gray-500">Sign in as the owner to view this hub.</p>
+            <p className="text-sm text-gray-500 mb-6">Sign in as the owner to view this hub.</p>
+            <a
+              href={`/login?next=/h/${slug}`}
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            >
+              Sign in
+            </a>
+          </div>
+        </div>
+      )
+    }
+    if (user.id !== hub.user_id) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center px-4">
+            <div className="text-5xl mb-4 select-none">&#128274;</div>
+            <h1 className="text-xl font-semibold text-gray-900 mb-2">This hub is private</h1>
+            <p className="text-sm text-gray-500">You don't have permission to view this hub.</p>
           </div>
         </div>
       )
