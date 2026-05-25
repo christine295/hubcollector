@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import HubCard from '@/components/HubCard'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 function EditCollectionModal({ open, onClose, onSave, collection }: any) {
   const [title, setTitle] = useState(collection?.title || "");
   const [description, setDescription] = useState(collection?.description || "");
@@ -88,6 +89,7 @@ function ConfirmModal({ open, onClose, onDelete, onMove, collectionTitle }: any)
 
 
 export default function CollectionsPage() {
+  const router = useRouter()
   const [collections, setCollections] = useState<any[]>([])
   const [uncategorizedHubs, setUncategorizedHubs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -167,13 +169,18 @@ export default function CollectionsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Collections</h1>
-          <Link
-            href="/dashboard"
+          <h1 className="text-xl font-bold text-gray-900">QRMagNotes</h1>
+          <button
+            type="button"
+            onClick={async () => {
+              const supabase = createClient()
+              await supabase.auth.signOut()
+              router.push('/login')
+            }}
             className="text-sm text-gray-400 hover:text-gray-700 transition-colors"
           >
-            Back to Dashboard
-          </Link>
+            Sign out
+          </button>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 py-8">
