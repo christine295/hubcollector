@@ -130,33 +130,36 @@ export default async function PublicHubPage({ params }: { params: Promise<{ slug
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       {hub.image_url ? (
-        <div
-          className="relative w-full overflow-hidden"
-          style={{ height: 'clamp(260px, 45vw, 460px)' }}
-        >
-          <img
-            src={hub.image_url}
-            alt={hub.title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5" />
-          <div className="absolute bottom-0 left-0 right-0 px-6 pb-8 md:px-10 md:pb-12">
-            <h1
-              className="text-[2rem] md:text-[3rem] font-bold text-white leading-tight"
-              style={{ textShadow: '0 2px 16px rgba(0,0,0,0.45)' }}
-            >
-              {hub.title}
-            </h1>
-            {hub.description && (
-              <p
-                className="mt-2 text-white/85 text-[1.05rem] md:text-[1.15rem] leading-relaxed max-w-prose"
-                style={{ textShadow: '0 1px 8px rgba(0,0,0,0.35)' }}
+        <>
+          {/* Image hero — title only, no description in overlay */}
+          <div
+            className="relative w-full overflow-hidden"
+            style={{ height: 'clamp(260px, 45vw, 460px)' }}
+          >
+            <img
+              src={hub.image_url}
+              alt={hub.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/5" />
+            <div className="absolute bottom-0 left-0 right-0 px-6 pb-7 md:px-10 md:pb-10">
+              <h1
+                className="text-[2rem] md:text-[3rem] font-bold text-white leading-tight"
+                style={{ textShadow: '0 2px 16px rgba(0,0,0,0.45)' }}
               >
+                {hub.title}
+              </h1>
+            </div>
+          </div>
+          {/* Description below image */}
+          {hub.description && (
+            <div className="max-w-xl mx-auto px-4 pt-6 pb-0">
+              <p className="text-[1.05rem] text-gray-600 leading-relaxed">
                 {hub.description}
               </p>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       ) : (
         <div
           className="relative px-6 py-16 md:py-24 text-center"
