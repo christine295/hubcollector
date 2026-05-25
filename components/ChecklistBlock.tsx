@@ -42,45 +42,47 @@ export default function ChecklistBlock({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex items-start justify-between px-5 pt-5 pb-1">
         {label && (
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color }}>
-            {label}
-          </p>
+          <div className="flex items-start gap-3">
+            <span className="text-xl leading-none mt-0.5 flex-shrink-0">☑️</span>
+            <h3 className="text-lg font-semibold text-gray-800 leading-snug">{label}</h3>
+          </div>
         )}
         {allChecked && (
           <button
             type="button"
             onClick={resetAll}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-3 pt-0.5"
           >
             Reset
           </button>
         )}
       </div>
-      <ul className="space-y-2">
+
+      <ul className="px-5 pb-5 pt-3 space-y-3">
         {items.map(item => (
           <li key={item.id}>
             <button
               type="button"
               onClick={() => toggle(item.id)}
-              className="flex items-center gap-3 w-full text-left group"
+              className="flex items-center gap-3.5 w-full text-left group py-0.5"
             >
               <span
-                className="w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors"
+                className="w-6 h-6 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors"
                 style={{
                   borderColor: checked.has(item.id) ? color : '#d1d5db',
                   backgroundColor: checked.has(item.id) ? color : 'transparent',
                 }}
               >
                 {checked.has(item.id) && (
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 )}
               </span>
-              <span className={`text-sm transition-colors ${checked.has(item.id) ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+              <span className={`text-base leading-snug transition-colors ${checked.has(item.id) ? 'line-through text-gray-400' : 'text-gray-700'}`}>
                 {item.text}
               </span>
             </button>
