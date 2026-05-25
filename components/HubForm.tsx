@@ -94,6 +94,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
   const [error, setError] = useState('')
   const [slugError, setSlugError] = useState('')
   const [createdHubId, setCreatedHubId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'content' | 'settings'>('content')
 
   async function createCollection() {
     if (!newCollectionTitle.trim()) return
@@ -258,9 +259,329 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
     )
   }
 
+  // ── Edit mode: Content / Settings tabs ──────────────────────────────────
+  if (isEditing) {
+    return (
+      <div>
+        <div className="flex border-b border-gray-200 mb-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab('content')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'content'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Content
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'settings'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Settings
+          </button>
+        </div>
+
+        {activeTab === 'content' && (
+          mode === 'landing' ? (
+            <ContentBlocksEditor hubId={hub.id} />
+          ) : (
+            <p className="text-sm text-gray-400 py-12 text-center">Content blocks are not available in redirect mode.</p>
+          )
+        )}
+
+        {activeTab === 'settings' && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Collection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Collection</label>
+              <div className="flex gap-2">
+                <select
+                  value={collectionId ?? ''}
+                  onChange={e => setCollectionId(e.target.value || null)}
+                  title="Collection"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={collectionsLoading}
+                >
+                  <option value="">No Collection</option>
+                  {collections.map((c: Collection) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCollection(v => !v)}
+                  className="text-sm text-blue-600 border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-50 transition-colors whitespace-nowrap"
+                >
+                  + New
+                </button>
+              </div>
+              {showNewCollection && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={newCollectionTitle}
+                    onChange={e => setNewCollectionTitle(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); createCollection() } }}
+                    placeholder="Collection name"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={createCollection}
+                    disabled={creatingCollection || !newCollectionTitle.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+                  >
+                    {creatingCollection ? '…' : 'Create'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowNewCollection(false); setNewCollectionTitle('') }}
+                    className="text-sm text-gray-400 hover:text-gray-600 px-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hub title</label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={e => handleTitleChange(e.target.value)}
+                placeholder="e.g. Home Hub, Workshop, Office"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Slug */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-400">
+                Slug <span className="text-xs font-normal text-amber-500">⚠ changing this breaks printed QR codes</span>
+              </label>
+              <div className="flex items-center border border-gray-200 bg-gray-50 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                <span className="px-3 py-2.5 bg-gray-100 text-gray-400 text-sm border-r border-gray-200 select-none">
+                  /h/
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={slug}
+                  onChange={e => handleSlugChange(e.target.value)}
+                  placeholder="our-home"
+                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent text-gray-400"
+                />
+              </div>
+              {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
+            </div>
+
+            {/* Mode */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMode('landing')}
+                  className={`border rounded-xl p-4 text-left transition-colors ${
+                    mode === 'landing' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`font-medium text-sm ${mode === 'landing' ? 'text-blue-700' : 'text-gray-700'}`}>
+                    Landing Page
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">Show a page with links</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('redirect')}
+                  className={`border rounded-xl p-4 text-left transition-colors ${
+                    mode === 'redirect' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`font-medium text-sm ${mode === 'redirect' ? 'text-amber-700' : 'text-gray-700'}`}>
+                    Redirect
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">Send visitors to a URL</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Visibility */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: 'public', label: 'Public', description: 'Anyone with the link' },
+                  { value: 'unlisted', label: 'Unlisted', description: 'Not listed publicly' },
+                  { value: 'private', label: 'Private', description: 'Only you can view' },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPrivacyMode(opt.value)}
+                    className={`border rounded-xl p-3 text-left transition-colors ${
+                      privacyMode === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`font-medium text-xs ${privacyMode === opt.value ? 'text-blue-700' : 'text-gray-700'}`}>
+                      {opt.label}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5 leading-tight">{opt.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {tags.map(tag => (
+                  <span key={tag} className="flex items-center gap-1 bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
+                    #{tag}
+                    <button type="button" onClick={() => setTags(prev => prev.filter(t => t !== tag))} className="text-gray-400 hover:text-gray-700 leading-none">×</button>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={() => { if (tagInput.trim()) addTag(tagInput) }}
+                placeholder="Type a tag and press Enter — e.g. seasonal, car, kitchen"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">Press Enter or comma to add. Used for filtering in your dashboard.</p>
+            </div>
+
+            {/* Redirect URL */}
+            {mode === 'redirect' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Destination URL</label>
+                <input
+                  type="url"
+                  required
+                  value={redirectUrl}
+                  onChange={e => setRedirectUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            {/* Landing page extras */}
+            {mode === 'landing' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="A short message shown on the public page"
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hub Image <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      title="Upload hub image"
+                      onChange={async e => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          setError('')
+                          const url = await uploadPhoto(file, slug || 'temp', 0)
+                          if (url) setImageUrl(url)
+                          else setError('Image upload failed. Check console for details.')
+                        }
+                      }}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={e => setImageUrl(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  {imageUrl && (
+                    <img src={imageUrl} alt="Hub image preview" className="mt-2 h-16 rounded-xl object-cover border" />
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Theme color</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {THEME_COLORS.map(c => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        title={c.label}
+                        onClick={() => setThemeColor(c.value)}
+                        className={`w-8 h-8 rounded-full transition-all ${
+                          themeColor === c.value
+                            ? 'ring-2 ring-offset-2 ring-gray-400 scale-110'
+                            : 'hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: c.value }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+              >
+                {isPending ? 'Saving…' : 'Save changes'}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    )
+  }
+
+  // ── Create mode ─────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Collection selector */}
+      {/* Collection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Collection</label>
         <div className="flex gap-2">
@@ -329,10 +650,8 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
 
       {/* Slug */}
       <div>
-        <label className={`block text-sm font-medium mb-1 ${isEditing ? 'text-gray-400' : 'text-gray-700'}`}>
-          Slug {isEditing && <span className="text-xs font-normal text-amber-500">⚠ changing this breaks printed QR codes</span>}
-        </label>
-        <div className={`flex items-center border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 ${isEditing ? 'border-gray-200 bg-gray-50' : 'border-gray-300'}`}>
+        <label className="block text-sm font-medium mb-1 text-gray-700">Slug</label>
+        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
           <span className="px-3 py-2.5 bg-gray-100 text-gray-400 text-sm border-r border-gray-200 select-none">
             /h/
           </span>
@@ -342,16 +661,16 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
             value={slug}
             onChange={e => handleSlugChange(e.target.value)}
             placeholder="our-home"
-            className={`flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent ${isEditing ? 'text-gray-400' : 'text-gray-900'}`}
+            className="flex-1 px-3 py-2.5 text-sm focus:outline-none bg-transparent text-gray-900"
           />
         </div>
         {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
-        {!slugError && !isEditing && (
+        {!slugError && (
           <p className="text-gray-400 text-xs mt-1">The permanent URL your QR code will always point to.</p>
         )}
       </div>
 
-      {/* Mode selector */}
+      {/* Mode */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Mode</label>
         <div className="grid grid-cols-2 gap-3">
@@ -359,9 +678,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
             type="button"
             onClick={() => setMode('landing')}
             className={`border rounded-xl p-4 text-left transition-colors ${
-              mode === 'landing'
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:bg-gray-50'
+              mode === 'landing' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
             }`}
           >
             <div className={`font-medium text-sm ${mode === 'landing' ? 'text-blue-700' : 'text-gray-700'}`}>
@@ -373,9 +690,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
             type="button"
             onClick={() => setMode('redirect')}
             className={`border rounded-xl p-4 text-left transition-colors ${
-              mode === 'redirect'
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-200 hover:bg-gray-50'
+              mode === 'redirect' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:bg-gray-50'
             }`}
           >
             <div className={`font-medium text-sm ${mode === 'redirect' ? 'text-amber-700' : 'text-gray-700'}`}>
@@ -400,9 +715,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
               type="button"
               onClick={() => setPrivacyMode(opt.value)}
               className={`border rounded-xl p-3 text-left transition-colors ${
-                privacyMode === opt.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:bg-gray-50'
+                privacyMode === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
               }`}
             >
               <div className={`font-medium text-xs ${privacyMode === opt.value ? 'text-blue-700' : 'text-gray-700'}`}>
@@ -439,7 +752,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
         <p className="text-xs text-gray-400 mt-1">Press Enter or comma to add. Used for filtering in your dashboard.</p>
       </div>
 
-      {/* Redirect mode fields */}
+      {/* Redirect URL */}
       {mode === 'redirect' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Destination URL</label>
@@ -454,7 +767,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
         </div>
       )}
 
-      {/* Landing page fields */}
+      {/* Landing page extras */}
       {mode === 'landing' && (
         <>
           <div>
@@ -525,13 +838,6 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
         </>
       )}
 
-      {isEditing && mode === 'landing' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Content Blocks</label>
-          <ContentBlocksEditor hubId={hub!.id} />
-        </div>
-      )}
-
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <div className="flex gap-3 pt-2">
@@ -540,7 +846,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
           disabled={isPending}
           className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
         >
-          {isPending ? 'Saving…' : isEditing ? 'Save changes' : 'Create hub'}
+          {isPending ? 'Saving…' : 'Create hub'}
         </button>
         <button
           type="button"
