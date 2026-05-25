@@ -100,7 +100,7 @@ const CEREMONIAL_LABELS = [
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF9F7' }}>
+    <div className="min-h-screen bg-[#FAF9F7]">
       <header className="bg-white border-b border-stone-200 px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -225,7 +225,7 @@ export default function HelpPage() {
             <li><strong>Block order matters.</strong> Blocks appear in sort order. Use ▲▼ arrows in the editor to reorder. High-priority content should come first since visitors read top-to-bottom.</li>
             <li><strong>Checklists are per-device.</strong> The checked state is stored in each visitor's browser localStorage — not the database. Every new device starts fresh.</li>
             <li><strong>Label your voice notes.</strong> Audio blocks with a date and label are much more meaningful when revisited weeks or months later.</li>
-            <li><strong>Image blocks use URLs.</strong> Images are not uploaded to QRMagNotes — they're referenced by URL. Host images elsewhere (Supabase Storage, Dropbox, etc.) and paste the public link.</li>
+            <li><strong>Image blocks support upload or URL.</strong> You can upload a photo directly from the image block editor, or paste a public URL. Uploaded images are stored in Supabase Storage.</li>
             <li><strong>Redirect mode is instant.</strong> A hub in redirect mode sends visitors directly to the destination URL with no loading screen shown.</li>
             <li><strong>Hub privacy options:</strong> Public (anyone can find and view), Unlisted (only people with the link can view), Private (only you can view when signed in).</li>
           </ul>
