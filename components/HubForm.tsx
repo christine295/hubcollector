@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Hub, HubLink } from '@/lib/types'
+import { Hub, HubLink, Collection } from '@/lib/types'
+import { useCollections } from './useCollections'
 import LinkEditor from './LinkEditor'
 import { uploadPhoto } from '@/lib/supabase/uploadPhoto'
 
@@ -78,6 +79,9 @@ function slugify(val: string) {
 }
 
 export default function HubForm({ hub, existingLinks, userId }: Props) {
+    // Fetch collections for the user
+    const { collections, loading: collectionsLoading } = useCollections(userId)
+    const [collectionId, setCollectionId] = useState<string | null>(hub?.collection_id ?? null)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const supabase = createClient()
@@ -170,6 +174,7 @@ export default function HubForm({ hub, existingLinks, userId }: Props) {
             description: mode === "landing" ? description || null : null,
             image_url: mode === "landing" ? imageUrl || null : null,
             theme_color: themeColor,
+            collection_id: collectionId || null,
           })
           .eq("id", hub.id)
 
@@ -197,6 +202,7 @@ export default function HubForm({ hub, existingLinks, userId }: Props) {
             description: mode === "landing" ? description || null : null,
             image_url: mode === "landing" ? imageUrl || null : null,
             theme_color: themeColor,
+            collection_id: collectionId || null,
           })
           .select()
           .single()
@@ -254,6 +260,21 @@ export default function HubForm({ hub, existingLinks, userId }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Collection selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Collection</label>
+              <select
+                value={collectionId ?? ''}
+                onChange={e => setCollectionId(e.target.value || null)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={collectionsLoading}
+              >
+                <option value="">No Collection</option>
+                {collections.map((c: Collection) => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
       {/* Title */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Hub title</label>
