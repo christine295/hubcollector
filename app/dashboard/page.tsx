@@ -35,47 +35,19 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">Your Hubs</h2>
-            <div className="flex gap-2">
-              <Link
-                href="/dashboard/collections"
-                className="bg-gray-100 hover:bg-gray-200 text-blue-700 text-sm font-medium px-4 py-2 rounded-lg border border-blue-100 transition-colors"
-              >
-                Collections
-              </Link>
-              <Link
-                href="/dashboard/hub/new"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-              >
-                + New Hub
-              </Link>
-            </div>
-          </div>
-
-        {hubs && hubs.length > 0 ? (
-          <div className="space-y-4">
-            {hubs.map(hub => (
-              <HubCard key={hub.id} hub={hub} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 px-4">
-            <div className="text-5xl mb-4">📋</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">No hubs yet</h3>
-            <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto">
-              Create a hub to get your first QR code. Place it on your fridge, entryway, or anywhere
-              your household needs a shared info point.
-            </p>
-            <Link
-              href="/dashboard/hub/new"
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors"
-            >
-              Create your first hub
-            </Link>
-          </div>
-        )}
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="text-5xl mb-4">📁</div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">Manage your hubs in Collections</h2>
+          <p className="text-gray-500 text-sm mb-6 max-w-xs text-center">
+            All your hubs are now organized in collections for a simpler experience.
+          </p>
+          <Link
+            href="/dashboard/collections"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 rounded-lg transition-colors"
+          >
+            Go to Collections
+          </Link>
+        </div>
       </main>
     </div>
   )
