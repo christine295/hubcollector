@@ -14,6 +14,28 @@ export type Hub = {
   description: string | null
   image_url: string | null
   theme_color: string | null
+  collection_id?: string | null
+  privacy_mode: 'public' | 'unlisted' | 'private'
+  created_at: string
+  updated_at: string
+}
+export type Collection = {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  cover_image: string | null
+  theme_color: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ContentBlock = {
+  id: string
+  hub_id: string
+  type: 'text' | 'image' | 'audio' | 'file' | 'links' | 'phone' | 'checklist' | 'timeline' | 'note'
+  data: any
+  sort_order: number
   created_at: string
   updated_at: string
 }

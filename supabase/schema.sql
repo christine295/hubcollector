@@ -95,7 +95,6 @@ create policy "Users can delete own hubs"
   on public.hubs for delete
   using (auth.uid() = user_id);
 
--- Hub Links: public read, owner write
 create policy "Anyone can view hub_links"
   on public.hub_links for select
   using (true);
@@ -109,3 +108,77 @@ create policy "Users can manage own hub_links"
         and hubs.user_id = auth.uid()
     )
   );
+
+
+-- ==================
+-- Collections
+-- ==================
+create table public.collections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  description text,
+  cover_image text,
+  theme_color text,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- updated_at trigger for collections
+create trigger update_collections_updated_at
+  before update on public.collections
+  for each row execute function public.update_updated_at();
+
+-- Collections RLS
+alter table public.collections enable row level security;
+create policy "Anyone can view collections"
+  on public.collections for select
+  using (true);
+create policy "Users can insert own collections"
+  on public.collections for insert
+  with check (auth.uid() = user_id);
+create policy "Users can update own collections"
+  on public.collections for update
+  using (auth.uid() = user_id);
+create policy "Users can delete own collections"
+  on public.collections for delete
+  using (auth.uid() = user_id);
+
+-- ==================
+-- Content Blocks
+-- ==================
+create table public.content_blocks (
+  id uuid primary key default gen_random_uuid(),
+  hub_id uuid not null references public.hubs(id) on delete cascade,
+  type text not null check (type in ('text', 'image', 'audio', 'file', 'links', 'phone', 'checklist', 'timeline', 'note')),
+  data jsonb not null,
+  sort_order integer not null default 0,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- updated_at trigger for content_blocks
+create trigger update_content_blocks_updated_at
+  before update on public.content_blocks
+  for each row execute function public.update_updated_at();
+
+-- Content Blocks RLS
+alter table public.content_blocks enable row level security;
+create policy "Anyone can view content_blocks"
+  on public.content_blocks for select
+  using (true);
+create policy "Users can manage own content_blocks"
+  on public.content_blocks for all
+  using (
+    exists (
+      select 1 from public.hubs
+      where hubs.id = content_blocks.hub_id
+        and hubs.user_id = auth.uid()
+    )
+  );
+
+-- ==================
+-- Schema Changes: Hubs
+-- ==================
+alter table public.hubs add column if not exists collection_id uuid references public.collections(id) on delete set null;
+alter table public.hubs add column if not exists privacy_mode text not null default 'public' check (privacy_mode in ('public', 'unlisted', 'private'));

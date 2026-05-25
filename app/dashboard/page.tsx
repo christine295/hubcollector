@@ -35,15 +35,24 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">Your Hubs</h2>
-          <Link
-            href="/dashboard/hub/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            + New Hub
-          </Link>
-        </div>
+
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-800">Your Hubs</h2>
+            <div className="flex gap-2">
+              <Link
+                href="/dashboard/collections"
+                className="bg-gray-100 hover:bg-gray-200 text-blue-700 text-sm font-medium px-4 py-2 rounded-lg border border-blue-100 transition-colors"
+              >
+                Collections
+              </Link>
+              <Link
+                href="/dashboard/hub/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                + New Hub
+              </Link>
+            </div>
+          </div>
 
         {hubs && hubs.length > 0 ? (
           <div className="space-y-4">
