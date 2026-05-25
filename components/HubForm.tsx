@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Hub, HubLink, Collection } from '@/lib/types'
 import { useCollections } from './useCollections'
 import LinkEditor from './LinkEditor'
+import AudioBlockEditor from './AudioBlockEditor'
 import { uploadPhoto } from '@/lib/supabase/uploadPhoto'
 
 const THEME_COLORS = [
@@ -471,6 +472,13 @@ export default function HubForm({ hub, existingLinks, userId, initialCollectionI
             <LinkEditor links={links} onChange={setLinks} />
           </div>
         </>
+      )}
+
+      {isEditing && mode === 'landing' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Voice Notes</label>
+          <AudioBlockEditor hubId={hub!.id} />
+        </div>
       )}
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
