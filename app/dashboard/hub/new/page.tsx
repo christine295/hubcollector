@@ -42,7 +42,7 @@ export default function NewHubPage() {
         </div>
       </header>
       <main className="max-w-xl mx-auto px-4 py-8">
-        <HubForm userId={user.id} initialCollectionId={collectionId} />
+        <HubForm userId={userId} initialCollectionId={collectionId} />
       </main>
     </div>
   )
