@@ -48,6 +48,117 @@ const TEMPLATES: Template[] = [
     hubDescription: 'The story, songs, symbols, and notes connected to this piece.',
     themeColor: '#8B5CF6',
   },
+  {
+    id: 'ritual',
+    label: 'Ritual Template',
+    emoji: '🕯️',
+    description: 'Document and revisit sacred rituals',
+    title: 'My Ritual',
+    hubDescription: 'A space to capture the intention, steps, and reflections of this ritual.',
+    themeColor: '#8B5CF6',
+  },
+]
+
+const RITUAL_BLOCKS = [
+  {
+    type: 'text' as const,
+    data: {
+      label: 'Ritual Overview',
+      text: 'Ritual Name:\n\nDate / Season / Moon Phase:\n\nIntention:\n\nLocation:\n\nWho is participating:',
+    },
+  },
+  {
+    type: 'checklist' as const,
+    data: {
+      label: 'Ritual Setup',
+      items: [
+        { id: 'rs-1', text: 'Cleanse the space', checked: false },
+        { id: 'rs-2', text: 'Prepare altar or ritual area', checked: false },
+        { id: 'rs-3', text: 'Gather candles', checked: false },
+        { id: 'rs-4', text: 'Gather herbs, crystals, tools, or offerings', checked: false },
+        { id: 'rs-5', text: 'Prepare music or playlist', checked: false },
+        { id: 'rs-6', text: 'Set water, journal, or divination tools nearby', checked: false },
+        { id: 'rs-7', text: 'Silence phone / reduce distractions', checked: false },
+        { id: 'rs-8', text: 'Ground and center', checked: false },
+      ],
+    },
+  },
+  {
+    type: 'text' as const,
+    data: {
+      label: 'Correspondences',
+      text: 'Colors:\n\nHerbs / Plants:\n\nCrystals / Stones:\n\nElements:\n\nDeities / Spirits / Guides:\n\nSymbols:\n\nOfferings:\n\nTarot / Oracle Cards:\n\nOther Notes:',
+    },
+  },
+  {
+    type: 'checklist' as const,
+    data: {
+      label: 'Ritual Steps',
+      items: [
+        { id: 'rstep-1', text: 'Opening / grounding', checked: false },
+        { id: 'rstep-2', text: 'Cleanse or bless the space', checked: false },
+        { id: 'rstep-3', text: 'Cast circle or create sacred space', checked: false },
+        { id: 'rstep-4', text: 'Call quarters / invite guides', checked: false },
+        { id: 'rstep-5', text: 'Invocation or prayer', checked: false },
+        { id: 'rstep-6', text: 'Main ritual working', checked: false },
+        { id: 'rstep-7', text: 'Meditation / silence / divination', checked: false },
+        { id: 'rstep-8', text: 'Offerings or gratitude', checked: false },
+        { id: 'rstep-9', text: 'Closing words', checked: false },
+        { id: 'rstep-10', text: 'Release quarters / close circle', checked: false },
+        { id: 'rstep-11', text: 'Final grounding', checked: false },
+      ],
+    },
+  },
+  {
+    type: 'text' as const,
+    data: {
+      label: 'Invocation / Words to Speak',
+      text: '',
+    },
+  },
+  {
+    type: 'link' as const,
+    data: {
+      label: 'Ritual Playlist',
+      url: '',
+    },
+  },
+  {
+    type: 'audio' as const,
+    data: {
+      label: 'Voice Reflections',
+      url: '',
+    },
+  },
+  {
+    type: 'text' as const,
+    data: {
+      label: 'Ritual Notes',
+      text: 'What energy did I feel before beginning?\n\nWhat shifted during the ritual?\n\nWhat signs, symbols, or synchronicities appeared?\n\nWhat emotions came up?\n\nWhat did I learn?\n\nWhat do I want to remember next time?',
+    },
+  },
+  {
+    type: 'image' as const,
+    data: {
+      url: '',
+      caption: 'Photos from this ritual',
+    },
+  },
+  {
+    type: 'checklist' as const,
+    data: {
+      label: 'Follow-Up',
+      items: [
+        { id: 'fu-1', text: 'Journal reflections', checked: false },
+        { id: 'fu-2', text: 'Dispose of offerings respectfully', checked: false },
+        { id: 'fu-3', text: 'Clean up ritual space', checked: false },
+        { id: 'fu-4', text: 'Save photos or voice notes', checked: false },
+        { id: 'fu-5', text: 'Record tarot/oracle cards', checked: false },
+        { id: 'fu-6', text: 'Watch for signs over the next few days', checked: false },
+        { id: 'fu-7', text: 'Revisit this ritual later', checked: false },
+      ],
+    },
+  },
 ]
 
 type Props = {
@@ -95,6 +206,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
   const [slugError, setSlugError] = useState('')
   const [createdHubId, setCreatedHubId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'content' | 'settings'>('content')
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
 
   async function createCollection() {
     if (!newCollectionTitle.trim()) return
@@ -129,6 +241,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
     setSlug(slugify(t.title))
     setDescription(t.hubDescription)
     setThemeColor(t.themeColor)
+    setSelectedTemplateId(t.id)
     setTemplateChosen(true)
   }
 
@@ -220,6 +333,17 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
           if (hubError.code === '23505') setSlugError('That slug is already taken')
           else setError(hubError.message)
           return
+        }
+
+        if (selectedTemplateId === 'ritual') {
+          await supabase.from('content_blocks').insert(
+            RITUAL_BLOCKS.map((b, i) => ({
+              hub_id: newHub.id,
+              type: b.type,
+              sort_order: i,
+              data: b.data,
+            }))
+          )
         }
 
         setCreatedHubId(newHub.id)
