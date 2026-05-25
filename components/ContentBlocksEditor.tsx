@@ -100,29 +100,26 @@ export default function ContentBlocksEditor({ hubId, hubTitle }: { hubId: string
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     if (targetIndex < 0 || targetIndex >= blocks.length) return
 
-    const newBlocks = [...blocks]
-    const a = newBlocks[index]
-    const b = newBlocks[targetIndex]
-    const aOrder = a.sort_order
-    const bOrder = b.sort_order
+    // Swap by array position, then normalize all sort_orders to 0,1,2,…
+    // This heals gaps and duplicates so every subsequent move works correctly.
+    const reordered = [...blocks]
+    ;[reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]]
+    const normalized = reordered.map((b, i) => ({ ...b, sort_order: i }))
+    setBlocks(normalized)
 
-    newBlocks[index] = { ...a, sort_order: bOrder }
-    newBlocks[targetIndex] = { ...b, sort_order: aOrder }
-    newBlocks.sort((x, y) => x.sort_order - y.sort_order)
-    setBlocks(newBlocks)
-
-    await Promise.all([
-      fetch(`/api/hub/${hubId}/content_blocks/${a.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: bOrder }),
-      }),
-      fetch(`/api/hub/${hubId}/content_blocks/${b.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sort_order: aOrder }),
-      }),
-    ])
+    // PATCH only the blocks whose sort_order actually changed
+    const changed = normalized.filter(
+      nb => blocks.find(b => b.id === nb.id)?.sort_order !== nb.sort_order
+    )
+    await Promise.all(
+      changed.map(b =>
+        fetch(`/api/hub/${hubId}/content_blocks/${b.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sort_order: b.sort_order }),
+        })
+      )
+    )
   }
 
   if (loading) return <div className="text-sm text-gray-400">Loading…</div>
