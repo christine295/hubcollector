@@ -93,6 +93,7 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
   const [tagInput, setTagInput] = useState('')
   const [error, setError] = useState('')
   const [slugError, setSlugError] = useState('')
+  const [createdHubId, setCreatedHubId] = useState<string | null>(null)
 
   async function createCollection() {
     if (!newCollectionTitle.trim()) return
@@ -220,14 +221,41 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
           return
         }
 
-        router.push(`/dashboard/hub/${newHub.id}/edit`)
-        router.refresh()
+        setCreatedHubId(newHub.id)
         return
       }
 
       router.push('/dashboard')
       router.refresh()
     })
+  }
+
+  if (createdHubId) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-medium text-green-800">Hub created! Add content blocks below.</p>
+          <p className="text-xs text-green-600 mt-0.5">You can always add more later from the edit page.</p>
+        </div>
+        <ContentBlocksEditor hubId={createdHubId} />
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard')}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+          >
+            Done
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/dashboard/hub/${createdHubId}/edit`)}
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Edit hub settings
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
