@@ -336,13 +336,14 @@ export default function HubForm({ hub, userId, initialCollectionId }: Props) {
         }
 
         if (selectedTemplateId === 'ritual') {
-          await supabase.from('content_blocks').insert(
-            RITUAL_BLOCKS.map((b, i) => ({
-              hub_id: newHub.id,
-              type: b.type,
-              sort_order: i,
-              data: b.data,
-            }))
+          await Promise.all(
+            RITUAL_BLOCKS.map((b, i) =>
+              fetch(`/api/hub/${newHub.id}/content_blocks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: b.type, data: b.data, sort_order: i }),
+              })
+            )
           )
         }
 
