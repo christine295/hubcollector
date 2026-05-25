@@ -126,6 +126,27 @@ const RITUAL_BLOCKS = [
   {
     type: 'link' as const,
     data: {
+      label: 'Reference: Moon & Seasons',
+      url: '',
+    },
+  },
+  {
+    type: 'link' as const,
+    data: {
+      label: 'Reference: Herb & Correspondences',
+      url: '',
+    },
+  },
+  {
+    type: 'link' as const,
+    data: {
+      label: 'Reference: Sacred Text / Source',
+      url: '',
+    },
+  },
+  {
+    type: 'link' as const,
+    data: {
       label: 'Ritual Playlist',
       url: '',
     },

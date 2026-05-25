@@ -96,7 +96,7 @@ Suggested blocks: Link (Spotify Playlist, Artist Notes), Text (Creative Process,
 
 ### Ritual Template (`ritual`)
 Pre-fills: title "My Ritual", description, violet theme (`#8B5CF6`).  
-Creates **11 content blocks** via `Promise.all` to the API route (RLS requires server-side auth context; direct client inserts fail silently).
+Creates **14 content blocks** via `Promise.all` to the API route (RLS requires server-side auth context; direct client inserts fail silently).
 
 | # | Label | Type | Notes |
 |---|-------|------|-------|
@@ -106,11 +106,14 @@ Creates **11 content blocks** via `Promise.all` to the API route (RLS requires s
 | 4 | Ritual Steps | checklist | 11 steps: opening → main working → meditation → offerings → closing → grounding |
 | 5 | Invocation / Words to Speak | text | Ceremonial styling (italic + accent border) |
 | 6 | Quote / Passage | text | Ceremonial styling (italic + accent border) |
-| 7 | Ritual Playlist | link | Spotify or any music URL |
-| 8 | Voice Reflections | audio | Voice note recorded during or after ritual |
-| 9 | Ritual Notes | text | Guided prompts: energy, shifts, signs, emotions, lessons, next time |
-| 10 | Photos | image | Altar or ritual photos |
-| 11 | Follow-Up | checklist | 7 actions: journal, offerings, cleanup, photos, tarot record, watch for signs, revisit |
+| 7 | Reference: Moon & Seasons | link | Blank — fill in preferred moon calendar or seasonal reference |
+| 8 | Reference: Herb & Correspondences | link | Blank — fill in preferred herb/crystal/element guide |
+| 9 | Reference: Sacred Text / Source | link | Blank — fill in source text, tradition resource, or citation |
+| 10 | Ritual Playlist | link | Spotify or any music URL |
+| 11 | Voice Reflections | audio | Voice note recorded during or after ritual |
+| 12 | Ritual Notes | text | Guided prompts: energy, shifts, signs, emotions, lessons, next time |
+| 13 | Photos | image | Altar or ritual photos |
+| 14 | Follow-Up | checklist | 7 actions: journal, offerings, cleanup, photos, tarot record, watch for signs, revisit |
 
 ---
 

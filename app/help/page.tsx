@@ -70,7 +70,7 @@ const TEMPLATES = [
   {
     name: 'Ritual Template',
     emoji: '🕯️',
-    description: 'A complete ritual documentation hub with 11 pre-built blocks in ceremonial order. Violet theme. Drop into any ritual practice — adapt labels and content as needed.',
+    description: 'A complete ritual documentation hub with 14 pre-built blocks in ceremonial order. Violet theme. Drop into any ritual practice — adapt labels and content as needed.',
     themeColor: '#8B5CF6',
     blocks: [
       { label: 'Ritual Overview', type: 'Text', note: 'Name, date/season/moon phase, intention, location, participants' },
@@ -79,6 +79,9 @@ const TEMPLATES = [
       { label: 'Ritual Steps', type: 'Checklist', note: '11 steps from opening through closing and final grounding' },
       { label: 'Invocation / Words to Speak', type: 'Text', note: 'Renders in italic with accent border — ceremonial text styling' },
       { label: 'Quote / Passage', type: 'Text', note: 'Renders in italic with accent border — for sacred text, poetry, or seasonal passages' },
+      { label: 'Reference: Moon & Seasons', type: 'Link', note: 'Blank — fill in your preferred moon calendar or seasonal guide' },
+      { label: 'Reference: Herb & Correspondences', type: 'Link', note: 'Blank — fill in your preferred herb, crystal, or element reference' },
+      { label: 'Reference: Sacred Text / Source', type: 'Link', note: 'Blank — fill in a source text, tradition resource, or citation' },
       { label: 'Ritual Playlist', type: 'Link', note: 'Spotify or any music URL' },
       { label: 'Voice Reflections', type: 'Audio', note: 'Voice note recorded during or after ritual' },
       { label: 'Ritual Notes', type: 'Text', note: 'Guided reflection prompts — energy, shifts, signs, emotions, lessons' },
