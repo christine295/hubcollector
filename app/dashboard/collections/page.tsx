@@ -39,6 +39,7 @@ function ConfirmModal({ open, onClose, onDelete, onMove, collectionTitle }: any)
 }
 
 
+export default function CollectionsPage() {
   const [collections, setCollections] = useState<any[]>([])
   const [uncategorizedHubs, setUncategorizedHubs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
