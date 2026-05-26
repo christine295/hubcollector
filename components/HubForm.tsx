@@ -528,7 +528,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
   const [imageUrl, setImageUrl] = useState(hub?.image_url ?? '')
   const [themeColor, setThemeColor] = useState(hub?.theme_color ?? '#3B82F6')
   const [privacyMode, setPrivacyMode] = useState<'public' | 'unlisted' | 'private'>(
-    hub?.privacy_mode ?? 'public'
+    hub?.privacy_mode ?? 'private'
   )
   const [tags, setTags] = useState<string[]>(hub?.tags ?? [])
   const [tagInput, setTagInput] = useState('')
