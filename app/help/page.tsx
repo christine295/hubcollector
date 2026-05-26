@@ -271,6 +271,22 @@ export default function HelpPage() {
           </div>
         </section>
 
+        {/* Dashboard & Folders */}
+        <section>
+          <h2 className="text-lg font-semibold text-stone-800 mb-4">Dashboard &amp; folders</h2>
+          <div className="prose-sm text-stone-600 leading-[1.7] space-y-3 max-w-prose">
+            <p>
+              Your dashboard shows all hubs in a single flat list, sorted by most recently updated. A collapsible <strong>Folders</strong> section sits above the list — click a folder name to filter the list to just that folder's hubs, then <strong>Show all ×</strong> to clear the filter.
+            </p>
+            <p>
+              <strong>Assigning a hub to a folder:</strong> At creation time the Folder selector appears just below the slug field. After creation, each hub card has a small <code className="text-stone-700 bg-stone-100 px-1 py-0.5 rounded text-xs">📁 folder name</code> dropdown — tap it to move the hub without going into Settings.
+            </p>
+            <p>
+              <strong>Hub type badge:</strong> When you create a hub from a template, a badge like <code className="text-stone-700 bg-stone-100 px-1 py-0.5 rounded text-xs">🐾 Pet Profile</code> appears on the dashboard card. For hubs started from Blank, you can add this label later via the hub's <strong>Settings tab → Hub type</strong>. Changing the type only updates the badge — it does not add or remove content blocks.
+            </p>
+          </div>
+        </section>
+
         {/* Block types */}
         <section>
           <h2 className="text-lg font-semibold text-stone-800 mb-6">Block types</h2>
@@ -370,6 +386,8 @@ export default function HelpPage() {
             <li><strong>Image blocks support upload or URL.</strong> You can upload a photo directly from the image block editor, or paste a public URL. Uploaded images are stored in Supabase Storage.</li>
             <li><strong>Redirect mode is instant.</strong> A hub in redirect mode sends visitors directly to the destination URL with no loading screen shown.</li>
             <li><strong>Hub privacy options:</strong> Public (anyone can find and view), Unlisted (only people with the link can view), Private (only you can view when signed in).</li>
+            <li><strong>Block content indicators.</strong> In the block editor, a small green dot means the block has content; a hollow gray ring means it's empty. Use this to scan quickly for blocks that still need filling in after applying a template.</li>
+            <li><strong>Hub type can be set anytime.</strong> Even hubs created from Blank can get a template badge — open Settings and choose a hub type. This just labels the card and has no effect on the content blocks.</li>
           </ul>
         </section>
 

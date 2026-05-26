@@ -60,6 +60,27 @@ All blocks are stored in `content_blocks` as `type` + `data` (JSONB) + `sort_ord
 
 ---
 
+## Dashboard & folders
+
+The dashboard (`/dashboard`) shows all your hubs as a flat list sorted by most recently updated. Above the list is a collapsible **Folders** section.
+
+**Folders:**
+- Click **▼ Show** to expand the Folders section; each folder row shows a name and hub count.
+- Click a folder name to filter the flat list to only that folder's hubs. A blue banner appears showing the active folder; click **Show all ×** to clear.
+- Use **+ Hub** on any folder row to create a new hub pre-assigned to that folder.
+- A default "My Hubs" folder is created automatically on first login if you have none.
+
+**Assigning a hub to a folder:**
+- At creation time: a Folder selector appears right after the slug field.
+- After creation: each hub card has a small `📁 folder name` dropdown — tap it to move the hub without going into Settings.
+- In hub Settings tab: full Folder dropdown with a **+ New** button to create a folder inline.
+
+**Hub type badge:**
+- When creating a hub from a template, the template name (e.g. "🐾 Pet Profile") appears as a badge on the dashboard card.
+- For hubs created from Blank, or to re-label any hub, go to the hub's **Settings tab → Hub type** dropdown. Changing this adds the badge only — it does not add or remove content blocks.
+
+---
+
 ## Styled quote / passage text
 
 Any `text` block whose label contains one of these words renders in **italic** with a thin accent-colored left border — useful for quotes, poetry, featured passages, spoken text, or any content that should feel set apart from body copy:
@@ -282,9 +303,24 @@ Creates **6 content blocks** via `Promise.all` to the API route.
 ## Adding a new template
 
 1. Add an entry to `TEMPLATES` array in `components/HubForm.tsx`
-2. If it needs pre-built blocks, define a `YOUR_TEMPLATE_BLOCKS` const (see `RITUAL_BLOCKS` for the pattern)
-3. In the `applyTemplate()` function's `onConfirm` handler, add a case that calls `Promise.all(YOUR_TEMPLATE_BLOCKS.map(...))`
-4. Block inserts must go through `fetch('/api/hub/${newHub.id}/content_blocks', { method: 'POST' })` — not direct Supabase client calls — due to RLS requiring server-side auth context
+2. Define a `YOUR_TEMPLATE_BLOCKS` const (follow `RECIPE_BLOCKS` as a simple pattern) — place it **before** `BLOCKS_BY_TEMPLATE` to avoid TypeScript forward-reference errors
+3. Add `your_id: YOUR_TEMPLATE_BLOCKS` to the `BLOCKS_BY_TEMPLATE` record
+4. Add a tag placeholder string to `TAG_PLACEHOLDERS` record
+5. Add audio suggestions array to `AUDIO_SUGGESTIONS` in `ContentBlocksEditor.tsx`
+6. Add checklist label placeholder to `CHECKLIST_LABEL_PLACEHOLDER` in `ContentBlocksEditor.tsx`
+
+Block inserts run automatically via `handleSubmit` — no per-template branching. All inserts go through `fetch('/api/hub/${newHub.id}/content_blocks', { method: 'POST' })` due to RLS requiring server-side auth context.
+
+---
+
+## Content block indicators
+
+In the block editor, each block row shows a small dot on the left:
+- **Solid green dot** — the block has content (text entered, URL filled, items or events added)
+- **Hollow gray ring** — the block is empty
+- Empty block rows also render on a light gray background as an additional visual cue
+
+This makes it easy to scan the editor and see what still needs to be filled in after applying a template.
 
 ---
 
@@ -292,5 +328,5 @@ Creates **6 content blocks** via `Promise.all` to the API route.
 
 - **Sort order gaps**: If a block insert fails (e.g., during bulk template creation), sort_order numbering can have gaps. When two blocks share the same sort_order, `moveBlock()` swaps equal values and does nothing. Fix: normalize sort_orders after every move (reassign 0,1,2,… from array position). Deferred — only manifests after a failed partial template insert.
 - **Multi-user slugs**: Current URL is `/h/[slug]`. Future plan: `/h/[username]/[slug]` for multi-tenant. Deferred until before real users print QR codes.
-- **Free tier limits**: 3 hubs / 1 collection not yet enforced.
+- **Free tier limits**: Hub and folder limits not yet enforced.
 - **Image uploads**: Supported directly from the image block editor. Uploaded files are stored in Supabase Storage. A public URL can also be pasted instead.

@@ -40,17 +40,17 @@ app/
   signup/page.tsx                    — email + Google auth
   auth/callback/route.ts             — OAuth callback handler
   help/page.tsx                      — in-app help & reference page (no auth required)
-  dashboard/collections/page.tsx     — main dashboard (hub list, collections)
+  dashboard/collections/page.tsx     — main dashboard (flat hub list primary; Folders section collapsible above list; auto-creates "My Hubs" folder on first load)
   dashboard/hub/new/page.tsx         — create hub (template picker → form → ContentBlocksEditor)
   dashboard/hub/[id]/edit/page.tsx   — edit hub (Content tab + Settings tab)
   dashboard/hub/[id]/print/page.tsx  — print QR card
   h/[slug]/page.tsx                  — public hub page (server component, passes to HubView)
 
 components/
-  HubCard.tsx              — dashboard card with Edit/View/Copy/QR buttons
-  HubForm.tsx              — create/edit form; TEMPLATES array; RITUAL_BLOCKS; tabs on edit
+  HubCard.tsx              — dashboard card; template badge, inline folder <select>, Edit/View/Copy/QR/Print buttons
+  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; RITUAL_BLOCKS + 10 other *_BLOCKS consts; tabs on edit (Content / Settings)
   HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
-  ContentBlocksEditor.tsx  — block editor used in HubForm (add/edit/delete/reorder blocks)
+  ContentBlocksEditor.tsx  — block editor (add/edit/delete/reorder); green dot = has content, hollow ring = empty
   ChecklistBlock.tsx       — standalone checklist component (used only in edit preview)
   DeleteHubForm.tsx        — delete confirmation
   QRButton.tsx             — downloads QR PNG via qrcode package
@@ -75,7 +75,8 @@ HELP.md             — developer reference: block shapes, design notes, templat
 
 Tables — all with RLS enabled:
 - **profiles** — auto-created via trigger on `auth.users` insert
-- **hubs** — owned by user; publicly readable for `/h/[slug]`
+- **hubs** — owned by user; publicly readable for `/h/[slug]`; columns include `collection_id` (FK → collections), `privacy_mode`, `tags text[]`, `template_id text`
+- **collections** — user-owned folders; hubs.collection_id references this
 - **content_blocks** — belongs to hub; type + data (JSONB) + sort_order
 
 `hub_links` table has been fully removed. All content is now in `content_blocks`.
@@ -107,6 +108,16 @@ Block inserts/updates **must go through the API routes** (`/api/hub/[hubId]/cont
 - `public` — anyone can find and view
 - `unlisted` — only people with the link can view
 - `private` — only the owner when signed in (others see a lock screen)
+
+**Hub type (`template_id`):**
+Stored as a text column on hubs. Set automatically when a hub is created from a template. Can also be set retroactively in the hub's Settings tab → "Hub type" dropdown — this only adds the badge label on the dashboard card; it does not add or remove content blocks.
+
+**Folders (formerly "Collections"):**
+- All user-facing text says "Folder". The DB table is still named `collections` and the FK is still `collection_id`.
+- Dashboard shows a flat hub list as primary view; Folders section is collapsible and appears above the list.
+- Clicking a folder name filters the flat list to that folder's hubs.
+- Each HubCard has an inline folder `<select>` for quick assignment without going to Settings.
+- First login auto-creates a "My Hubs" folder if the user has none.
 
 The QR code always points to `/h/[slug]`. The slug is permanent — changing it breaks printed QR codes.
 
@@ -150,39 +161,20 @@ Any `text` block whose label contains `invocation`, `words to speak`, `quote`, `
 
 ## Templates
 
-Defined in `TEMPLATES` array in `components/HubForm.tsx`. Template picker shown before create form.
+Defined in `TEMPLATES` array in `components/HubForm.tsx`. Template picker shown before create form. All blocks are created via `BLOCKS_BY_TEMPLATE` record in `handleSubmit` — no per-template branching needed.
 
-### Blank
-Empty hub, blue theme. No pre-built blocks.
+**12 templates:** Blank, Artwork Archive (8 blocks), Ritual (14 blocks), Recipe (8 blocks), What's in the Box? (8 blocks), Plant Profile (8 blocks), Home Maintenance Log (8 blocks), Travel Journal (7 blocks), Pet Profile (8 blocks), Book / Reading Notes (7 blocks), Goal / Habit Tracker (6 blocks), Daily Reflection / Journal (6 blocks).
 
-### Artwork Archive
-Pre-fills title "Untitled Artwork" + violet theme. Creates **8 content blocks**: Main Photo (image), Description (text), Details (text — Date Created / Medium / Dimensions / Status), Color Palette (text), Inspiration / Meaning (text), Additional Photos (image), Music / Playlist (link), Notes (text).
-
-### Ritual Template
-Violet theme. Creates **14 content blocks** via `Promise.all` API calls on hub creation:
-
-| # | Label | Type |
-|---|-------|------|
-| 1 | Ritual Overview | text |
-| 2 | Ritual Setup | checklist (8 items) |
-| 3 | Correspondences | text |
-| 4 | Ritual Steps | checklist (11 items) |
-| 5 | Invocation / Words to Speak | text (ceremonial styling) |
-| 6 | Quote / Passage | text (ceremonial styling) |
-| 7 | Reference: Moon & Seasons | link |
-| 8 | Reference: Herb & Correspondences | link |
-| 9 | Reference: Sacred Text / Source | link |
-| 10 | Ritual Playlist | link |
-| 11 | Voice Reflections | audio |
-| 12 | Ritual Notes | text |
-| 13 | Photos | image |
-| 14 | Follow-Up | checklist (7 items) |
+See `HELP.md` for the full block-by-block breakdown of each template.
 
 ### Adding a new template
 1. Add an entry to `TEMPLATES` in `components/HubForm.tsx`
-2. Define a `YOUR_TEMPLATE_BLOCKS` const (see `RITUAL_BLOCKS` for the pattern)
-3. In the `applyTemplate()` `onConfirm` handler, add a case calling `Promise.all(YOUR_TEMPLATE_BLOCKS.map(...))`
-4. All block inserts must use `fetch('/api/hub/${id}/content_blocks', { method: 'POST' })`
+2. Define a `YOUR_TEMPLATE_BLOCKS` const (follow `RITUAL_BLOCKS` or `RECIPE_BLOCKS` as pattern) — place it **before** `BLOCKS_BY_TEMPLATE` to avoid forward-reference errors
+3. Add `your_id: YOUR_TEMPLATE_BLOCKS` to the `BLOCKS_BY_TEMPLATE` record
+4. Add a tag placeholder to `TAG_PLACEHOLDERS` record
+5. Add audio label suggestions to `AUDIO_SUGGESTIONS` in `ContentBlocksEditor.tsx`
+6. Add checklist label placeholder to `CHECKLIST_LABEL_PLACEHOLDER` in `ContentBlocksEditor.tsx`
+7. All block inserts use `fetch('/api/hub/${newHub.id}/content_blocks', { method: 'POST' })` automatically via the map in `handleSubmit`
 
 ## Sort order
 
@@ -192,9 +184,19 @@ New blocks are inserted with `sort_order: blocks.length`.
 
 ## HubForm edit mode
 
-Edit page uses Content / Settings tabs (`activeTab` state). Content tab renders `<ContentBlocksEditor hubId={hub.id} hubTitle={hub.title} />`. Settings tab has the form fields.
+Edit page uses Content / Settings tabs (`activeTab` state). Content tab renders `<ContentBlocksEditor hubId={hub.id} hubTitle={hub.title} />`. Settings tab has all hub fields including Folder, Hub type (template_id dropdown), title, slug, mode, visibility, tags, description, image, theme color.
 
 The `✓ Saved` chip appears for 2.5s after a block is updated (`savedBlockId` state).
+
+## ContentBlocksEditor
+
+Block rows show a **content indicator dot**: solid green (`bg-emerald-400`) if the block has content, hollow gray ring (`border border-gray-300`) if empty. Empty block rows also render on `bg-gray-50` instead of white.
+
+`blockHasContent(block)` function in `ContentBlocksEditor.tsx` determines this by checking:
+- `text/audio/link/phone/file` → `data.url` or `data.text` is non-empty
+- `checklist` → `data.items.length > 0`
+- `timeline` → `data.events.length > 0`
+- `image` → `data.url` is non-empty
 
 ## Help system
 
@@ -211,8 +213,21 @@ Both files must stay template-agnostic in general sections. Template-specific co
 
 ## Not yet built
 
-- Free tier enforcement (3 hubs / 1 collection limits)
+- Free tier enforcement (hub/folder limits)
 - Paid feature: `hide_footer` flag to remove footer branding on public hubs
 - Multi-user URL path: `/h/[slug]` → `/h/[username]/[slug]` (deferred until before real users print QR codes)
 - Sort order normalization on load (gaps only heal on first move, not on page load)
-- More templates (current: Blank, Artwork Archive, Ritual, Recipe, What's in the Box?, Plant Profile, Home Maintenance Log, Travel Journal, Pet Profile, Book / Reading Notes, Goal / Habit Tracker, Daily Reflection / Journal)
+
+## DB migrations applied (Supabase SQL editor)
+
+Beyond the base schema in `supabase/schema.sql`, these have been applied to the live project:
+
+```sql
+alter table public.hubs add column if not exists collection_id uuid references public.collections(id) on delete set null;
+alter table public.hubs add column if not exists privacy_mode text not null default 'public' check (privacy_mode in ('public', 'unlisted', 'private'));
+alter table public.hubs add column if not exists tags text[] not null default '{}';
+alter table public.hubs add column if not exists template_id text;
+ALTER TABLE public.content_blocks DROP CONSTRAINT IF EXISTS content_blocks_type_check;
+ALTER TABLE public.content_blocks ADD CONSTRAINT content_blocks_type_check
+  CHECK (type IN ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note'));
+```
