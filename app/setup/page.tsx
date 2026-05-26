@@ -6,10 +6,23 @@ import { createClient } from '@/lib/supabase/client'
 
 const USERNAME_RE = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/
 
+const RESERVED = new Set([
+  // route conflicts
+  'about', 'api', 'auth', 'dashboard', 'help', 'home', 'hub', 'hubs',
+  'login', 'print', 'setup', 'signup',
+  // admin / brand
+  'admin', 'administrator', 'billing', 'mod', 'moderator', 'qrmagnotes',
+  'qrmag', 'root', 'staff', 'support', 'system', 'team',
+  // generic traps
+  'account', 'accounts', 'me', 'null', 'profile', 'profiles', 'settings',
+  'undefined', 'user', 'users',
+])
+
 function validateUsername(val: string): string | null {
   if (val.length < 3) return 'At least 3 characters'
   if (val.length > 30) return 'At most 30 characters'
   if (!USERNAME_RE.test(val)) return 'Lowercase letters, numbers, and hyphens only — no leading or trailing hyphens'
+  if (RESERVED.has(val)) return 'That username is reserved — please choose another'
   return null
 }
 
