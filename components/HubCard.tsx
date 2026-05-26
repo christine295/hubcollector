@@ -22,7 +22,17 @@ const TEMPLATE_LABELS: Record<string, { emoji: string; label: string }> = {
   journal:     { emoji: '📓', label: 'Journal' },
 }
 
-export default function HubCard({ hub, onTagClick }: { hub: Hub; onTagClick?: (tag: string) => void }) {
+export default function HubCard({
+  hub,
+  onTagClick,
+  folders,
+  onFolderChange,
+}: {
+  hub: Hub
+  onTagClick?: (tag: string) => void
+  folders?: { id: string; title: string }[]
+  onFolderChange?: (hubId: string, folderId: string | null) => void
+}) {
   const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/h/${hub.slug}`
 
   async function copyLink() {
@@ -37,8 +47,21 @@ export default function HubCard({ hub, onTagClick }: { hub: Hub; onTagClick?: (t
           <h3 className="font-semibold text-gray-900">{hub.title}</h3>
           <p className="text-xs text-gray-400 font-mono mt-0.5">/h/{hub.slug}</p>
           <p className="text-xs text-gray-300 mt-1">
-            Created {formatDate(hub.created_at)} · Updated {formatDate(hub.updated_at)}
+            Updated {formatDate(hub.updated_at)}
           </p>
+          {folders !== undefined && (
+            <select
+              value={hub.collection_id ?? ''}
+              onChange={e => onFolderChange?.(hub.id, e.target.value || null)}
+              title="Folder"
+              className="mt-1.5 text-xs text-gray-400 bg-transparent border-none cursor-pointer focus:outline-none hover:text-gray-600 -ml-0.5"
+            >
+              <option value="">📁 No folder</option>
+              {folders.map(f => (
+                <option key={f.id} value={f.id}>📁 {f.title}</option>
+              ))}
+            </select>
+          )}
           {hub.tags && hub.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {hub.tags.map(tag => (
@@ -98,6 +121,7 @@ export default function HubCard({ hub, onTagClick }: { hub: Hub; onTagClick?: (t
           View
         </a>
         <button
+          type="button"
           onClick={copyLink}
           className="text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:text-gray-900 transition-colors"
         >

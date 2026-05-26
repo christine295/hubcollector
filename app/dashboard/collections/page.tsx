@@ -103,6 +103,7 @@ export default function DashboardPage() {
   const [folders, setFolders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [foldersOpen, setFoldersOpen] = useState(false)
+  const [folderFilter, setFolderFilter] = useState<string | null>(null)
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [newFolderTitle, setNewFolderTitle] = useState('')
   const [folderError, setFolderError] = useState('')
@@ -124,10 +125,9 @@ export default function DashboardPage() {
     const matchesMode = modeFilter === 'all' || hub.mode === modeFilter
     const matchesPrivacy = privacyFilter === 'all' || hub.privacy_mode === privacyFilter
     const matchesTag = !tagFilter || (hub.tags ?? []).includes(tagFilter)
-    return matchesSearch && matchesMode && matchesPrivacy && matchesTag
+    const matchesFolder = folderFilter === null || hub.collection_id === folderFilter
+    return matchesSearch && matchesMode && matchesPrivacy && matchesTag && matchesFolder
   }
-
-  const isFiltering = searchQuery || modeFilter !== 'all' || privacyFilter !== 'all' || tagFilter
 
   useEffect(() => {
     async function fetchData() {
@@ -136,16 +136,8 @@ export default function DashboardPage() {
       if (!user) { router.replace('/login'); return }
 
       const [{ data: hubsData }, { data: foldersData }] = await Promise.all([
-        supabase
-          .from('hubs')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false }),
-        supabase
-          .from('collections')
-          .select('*, hubs(*)')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
+        supabase.from('hubs').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }),
+        supabase.from('collections').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
       ])
 
       setAllHubs(hubsData || [])
@@ -153,11 +145,8 @@ export default function DashboardPage() {
       let currentFolders = foldersData || []
       if (currentFolders.length === 0) {
         const { data: newFolder } = await supabase
-          .from('collections')
-          .insert({ user_id: user.id, title: 'My Hubs' })
-          .select()
-          .single()
-        if (newFolder) currentFolders = [{ ...newFolder, hubs: [] }]
+          .from('collections').insert({ user_id: user.id, title: 'My Hubs' }).select().single()
+        if (newFolder) currentFolders = [newFolder]
       }
       setFolders(currentFolders)
       setLoading(false)
@@ -173,19 +162,23 @@ export default function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data, error } = await supabase
-      .from('collections')
-      .insert([{ user_id: user.id, title: newFolderTitle.trim() }])
-      .select()
-      .single()
+      .from('collections').insert([{ user_id: user.id, title: newFolderTitle.trim() }]).select().single()
     if (error) { setFolderError(error.message); return }
-    setFolders(prev => [{ ...data, hubs: [] }, ...prev])
+    setFolders(prev => [data, ...prev])
     setNewFolderTitle('')
     setShowCreateFolder(false)
+  }
+
+  async function handleFolderChange(hubId: string, folderId: string | null) {
+    const supabase = createClient()
+    await supabase.from('hubs').update({ collection_id: folderId }).eq('id', hubId)
+    setAllHubs(prev => prev.map(h => h.id === hubId ? { ...h, collection_id: folderId } : h))
   }
 
   const totalHubs = allHubs.length
   const totalFolders = folders.length
   const filteredHubs = allHubs.filter(hubMatches)
+  const activeFolder = folderFilter ? folders.find((f: any) => f.id === folderFilter) : null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -224,6 +217,20 @@ export default function DashboardPage() {
             + New Hub
           </Link>
         </div>
+
+        {/* Folder filter banner */}
+        {activeFolder && (
+          <div className="flex items-center justify-between mb-4 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-lg">
+            <span className="text-sm text-blue-700 font-medium">📁 {activeFolder.title}</span>
+            <button
+              type="button"
+              onClick={() => setFolderFilter(null)}
+              className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
+            >
+              Show all ×
+            </button>
+          </div>
+        )}
 
         {/* Search & filter */}
         <div className="mb-6 space-y-2">
@@ -289,7 +296,13 @@ export default function DashboardPage() {
           <div className="space-y-3 mb-8">
             {filteredHubs.length > 0 ? (
               filteredHubs.map((hub: any) => (
-                <HubCard key={hub.id} hub={hub} onTagClick={setTagFilter} />
+                <HubCard
+                  key={hub.id}
+                  hub={hub}
+                  onTagClick={setTagFilter}
+                  folders={folders}
+                  onFolderChange={handleFolderChange}
+                />
               ))
             ) : (
               <div className="text-center py-12 text-gray-400 text-sm">
@@ -299,7 +312,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Folders section */}
+        {/* Folders section — compact rows, click to filter */}
         {!loading && (
           <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
             <button
@@ -307,24 +320,34 @@ export default function DashboardPage() {
               onClick={() => setFoldersOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
             >
-              <span className="font-medium text-gray-700 text-sm">
-                Folders ({totalFolders})
-              </span>
+              <span className="font-medium text-gray-700 text-sm">Folders ({totalFolders})</span>
               <span className="text-gray-400 text-xs">{foldersOpen ? '▲ Hide' : '▼ Show'}</span>
             </button>
 
             {foldersOpen && (
-              <div className="border-t border-gray-100 px-5 pb-5 pt-4 space-y-6">
-                {folders.map((folder: any) => (
-                  <div key={folder.id}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h2 className="font-semibold text-gray-900 text-sm">{folder.title}</h2>
-                        {folder.description && (
-                          <p className="text-xs text-gray-400 mt-0.5">{folder.description}</p>
-                        )}
-                      </div>
+              <div className="border-t border-gray-100">
+                {folders.map((folder: any) => {
+                  const count = allHubs.filter(h => h.collection_id === folder.id).length
+                  const isActive = folderFilter === folder.id
+                  return (
+                    <div key={folder.id} className="flex items-center justify-between px-5 py-3 border-b border-gray-50 last:border-0">
+                      <button
+                        type="button"
+                        onClick={() => setFolderFilter(isActive ? null : folder.id)}
+                        className={`flex items-center gap-2 text-sm transition-colors ${isActive ? 'text-blue-600 font-medium' : 'text-gray-700 hover:text-blue-600'}`}
+                      >
+                        📁 {folder.title}
+                        <span className="text-xs font-normal text-gray-400">
+                          {count} {count === 1 ? 'hub' : 'hubs'}
+                        </span>
+                      </button>
                       <div className="flex items-center gap-2">
+                        <Link
+                          href={`/dashboard/hub/new?collection=${folder.id}`}
+                          className="text-xs text-blue-600 border border-blue-100 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
+                        >
+                          + Hub
+                        </Link>
                         <button
                           type="button"
                           className="text-xs text-gray-500 border border-gray-200 rounded px-2 py-1 hover:bg-gray-100 transition-colors"
@@ -339,29 +362,13 @@ export default function DashboardPage() {
                         >
                           Delete
                         </button>
-                        <Link
-                          href={`/dashboard/hub/new?collection=${folder.id}`}
-                          className="text-xs text-blue-600 border border-blue-200 rounded px-2 py-1 hover:bg-blue-50 transition-colors"
-                        >
-                          + Add Hub
-                        </Link>
                       </div>
                     </div>
-                    {folder.hubs && folder.hubs.length > 0 ? (
-                      <div className="space-y-2">
-                        {folder.hubs.map((hub: any) => (
-                          <HubCard key={hub.id} hub={hub} onTagClick={setTagFilter} />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-400 py-2">No hubs in this folder.</p>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
 
-                {/* Create folder */}
                 {showCreateFolder ? (
-                  <form onSubmit={handleCreateFolder} className="flex gap-2 items-start pt-2">
+                  <form onSubmit={handleCreateFolder} className="flex gap-2 px-5 py-4 border-t border-gray-100">
                     <div className="flex-1">
                       <input
                         type="text"
@@ -388,13 +395,15 @@ export default function DashboardPage() {
                     </button>
                   </form>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateFolder(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                  >
-                    + New Folder
-                  </button>
+                  <div className="px-5 py-4 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateFolder(true)}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      + New Folder
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -424,11 +433,12 @@ export default function DashboardPage() {
           if (!confirmFolder) return
           setConfirmFolderOpen(false)
           const supabase = createClient()
-          const hubIds = (confirmFolder.hubs ?? []).map((h: any) => h.id)
+          const hubIds = allHubs.filter(h => h.collection_id === confirmFolder.id).map(h => h.id)
           if (hubIds.length > 0) await supabase.from('hubs').delete().in('id', hubIds)
           await supabase.from('collections').delete().eq('id', confirmFolder.id)
           setFolders(prev => prev.filter((f: any) => f.id !== confirmFolder.id))
-          setAllHubs(prev => prev.filter((h: any) => !hubIds.includes(h.id)))
+          setAllHubs(prev => prev.filter(h => !hubIds.includes(h.id)))
+          if (folderFilter === confirmFolder.id) setFolderFilter(null)
           setConfirmFolder(null)
         }}
         onMove={async () => {
@@ -438,9 +448,10 @@ export default function DashboardPage() {
           await supabase.from('hubs').update({ collection_id: null }).eq('collection_id', confirmFolder.id)
           await supabase.from('collections').delete().eq('id', confirmFolder.id)
           setFolders(prev => prev.filter((f: any) => f.id !== confirmFolder.id))
-          setAllHubs(prev => prev.map((h: any) =>
+          setAllHubs(prev => prev.map(h =>
             h.collection_id === confirmFolder.id ? { ...h, collection_id: null } : h
           ))
+          if (folderFilter === confirmFolder.id) setFolderFilter(null)
           setConfirmFolder(null)
         }}
       />
