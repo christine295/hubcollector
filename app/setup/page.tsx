@@ -179,7 +179,7 @@ export default function SetupPage() {
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
             <p className="text-xs text-amber-700">
-              <strong>Choose carefully.</strong> Changing your username later will break any QR codes you&apos;ve printed.
+              Your username becomes part of your printable QR links, so it&apos;s best to choose something long-term.
             </p>
           </div>
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Hub } from '@/lib/types'
 import QRButton from './QRButton'
@@ -35,51 +36,105 @@ export default function HubCard({
   folders?: { id: string; title: string }[]
   onFolderChange?: (hubId: string, folderId: string | null) => void
 }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/h/${username}/${hub.slug}`
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [menuOpen])
 
   async function copyLink() {
     await navigator.clipboard.writeText(publicUrl)
+    setMenuOpen(false)
     alert('Link copied to clipboard!')
   }
 
+  const hasTags = hub.tags && hub.tags.length > 0
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div>
+      <div className="flex items-start justify-between gap-4">
+        {/* Left: info */}
+        <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-gray-900">{hub.title}</h3>
           <p className="text-xs text-gray-400 font-mono mt-0.5">/h/{username}/{hub.slug}</p>
-          <p className="text-xs text-gray-300 mt-1">
-            Updated {formatDate(hub.updated_at)}
-          </p>
+          <p className="text-xs text-gray-300 mt-1">Updated {formatDate(hub.updated_at)}</p>
           {folders !== undefined && (
             <select
               value={hub.collection_id ?? ''}
               onChange={e => onFolderChange?.(hub.id, e.target.value || null)}
-              title="Folder"
+              title="Collection"
               className="mt-1.5 text-xs text-gray-400 bg-transparent border-none cursor-pointer focus:outline-none hover:text-gray-600 -ml-0.5"
             >
-              <option value="">📁 No folder</option>
+              <option value="">📁 No collection</option>
               {folders.map(f => (
                 <option key={f.id} value={f.id}>📁 {f.title}</option>
               ))}
             </select>
           )}
-          {hub.tags && hub.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {hub.tags.map(tag => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => onTagClick?.(tag)}
-                  className="text-xs bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-500 px-2 py-0.5 rounded-full transition-colors"
-                >
-                  #{tag}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
-        <div className="flex flex-col items-end gap-1">
+
+        {/* Right: badges + kebab */}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <div ref={menuRef} className="relative mb-1">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="Actions"
+              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md px-2 py-1 transition-colors text-lg leading-none"
+            >
+              ⋮
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
+                <Link
+                  href={`/dashboard/hub/${hub.id}/edit`}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Edit
+                </Link>
+                <a
+                  href={`/h/${username}/${hub.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  View
+                </a>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Copy link
+                </button>
+                <QRButton
+                  slug={hub.slug}
+                  username={username}
+                  className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  onComplete={() => setMenuOpen(false)}
+                />
+                <Link
+                  href={`/dashboard/hub/${hub.id}/print`}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Print card
+                </Link>
+              </div>
+            )}
+          </div>
+
           {hub.template_id && TEMPLATE_LABELS[hub.template_id] && (
             <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-stone-100 text-stone-500">
               {TEMPLATE_LABELS[hub.template_id].emoji} {TEMPLATE_LABELS[hub.template_id].label}
@@ -107,36 +162,21 @@ export default function HubCard({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href={`/dashboard/hub/${hub.id}/edit`}
-          className="text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-        >
-          Edit
-        </Link>
-        <a
-          href={`/h/${username}/${hub.slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-        >
-          View
-        </a>
-        <button
-          type="button"
-          onClick={copyLink}
-          className="text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-        >
-          Copy Link
-        </button>
-        <QRButton slug={hub.slug} username={username} />
-        <Link
-          href={`/dashboard/hub/${hub.id}/print`}
-          className="text-sm font-medium text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-        >
-          Print Card
-        </Link>
-      </div>
+      {/* Tags */}
+      {hasTags && (
+        <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-100">
+          {hub.tags.map(tag => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => onTagClick?.(tag)}
+              className="text-xs bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-500 px-2 py-0.5 rounded-full transition-colors"
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

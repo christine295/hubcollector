@@ -17,15 +17,15 @@ function EditFolderModal({ open, onClose, onSave, folder }: any) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
       <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-xs">
-        <h3 className="font-semibold text-lg mb-4">Edit Folder</h3>
+        <h3 className="font-semibold text-lg mb-4">Edit Collection</h3>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
           <input
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            title="Folder name"
-            placeholder="Folder name"
+            title="Collection name"
+            placeholder="Collection name"
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -66,7 +66,7 @@ function ConfirmFolderDeleteModal({ open, onClose, onDelete, onMove, folderTitle
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
       <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-xs">
-        <h3 className="font-semibold text-lg mb-2">Delete Folder</h3>
+        <h3 className="font-semibold text-lg mb-2">Delete Collection</h3>
         <p className="text-gray-700 text-sm mb-4">
           What should happen to the hubs in <span className="font-bold">{folderTitle}</span>?
         </p>
@@ -76,14 +76,14 @@ function ConfirmFolderDeleteModal({ open, onClose, onDelete, onMove, folderTitle
             className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
             onClick={onDelete}
           >
-            Delete folder &amp; all hubs inside
+            Delete collection &amp; all hubs inside
           </button>
           <button
             type="button"
             className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg"
             onClick={onMove}
           >
-            Keep hubs, remove from folder
+            Keep hubs, remove from collection
           </button>
           <button
             type="button"
@@ -220,7 +220,7 @@ export default function DashboardPage() {
         {/* Stats + primary CTA */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-gray-400">
-            {!loading && `${totalHubs} ${totalHubs === 1 ? 'hub' : 'hubs'} · ${totalFolders} ${totalFolders === 1 ? 'folder' : 'folders'}`}
+            {!loading && `${totalHubs} ${totalHubs === 1 ? 'hub' : 'hubs'} · ${totalFolders} ${totalFolders === 1 ? 'collection' : 'collections'}`}
           </p>
           <Link
             href="/dashboard/hub/new"
@@ -256,8 +256,8 @@ export default function DashboardPage() {
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
             >
               <option value="all">All modes</option>
-              <option value="landing">Landing Page</option>
-              <option value="redirect">Redirect</option>
+              <option value="landing">Interactive Pages</option>
+              <option value="redirect">Redirect Links</option>
             </select>
             <select
               value={privacyFilter}
@@ -281,7 +281,7 @@ export default function DashboardPage() {
               onClick={() => setFoldersOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
             >
-              <span className="font-medium text-gray-700 text-sm">Folders ({totalFolders})</span>
+              <span className="font-medium text-gray-700 text-sm">Collections ({totalFolders})</span>
               <span className="text-gray-400 text-xs">{foldersOpen ? '▲ Hide' : '▼ Show'}</span>
             </button>
 
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                           className="text-xs text-gray-500 border border-gray-200 rounded px-2 py-1 hover:bg-gray-100 transition-colors"
                           onClick={() => { setEditFolder(folder); setEditFolderOpen(true) }}
                         >
-                          Edit
+                          Rename
                         </button>
                         <button
                           type="button"
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                         type="text"
                         value={newFolderTitle}
                         onChange={e => setNewFolderTitle(e.target.value)}
-                        placeholder="Folder name"
+                        placeholder="Collection name"
                         autoFocus
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                       onClick={() => setShowCreateFolder(true)}
                       className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
                     >
-                      + New Folder
+                      + New Collection
                     </button>
                   </div>
                 )}
@@ -391,9 +391,9 @@ export default function DashboardPage() {
         ) : allHubs.length === 0 ? (
           <div className="text-center py-20 px-4">
             <div className="text-5xl mb-4">✨</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Create your first hub</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Create a QR page for anything</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto">
-              Choose a template to get started — or start blank and build as you go.
+              Create a QR page (&ldquo;Hub&rdquo;) for anything you want to remember, organize, or share.
             </p>
             <Link
               href="/dashboard/hub/new"
