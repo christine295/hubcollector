@@ -40,7 +40,7 @@ app/
   signup/page.tsx                    — Google OAuth only; email form grayed out pending SMTP setup
   setup/page.tsx                     — username picker; shown once after first login (when username_confirmed=false); redirects to /dashboard on confirm
   auth/callback/route.ts             — OAuth callback handler
-  help/page.tsx                      — in-app help & reference page (no auth required)
+  help/page.tsx                      — in-app onboarding & inspiration page (no auth required); server component; sections: intro, popular uses, template cards grid, how hubs work, collections, block types, advanced styling, tips
   dashboard/collections/page.tsx     — main dashboard; collection cards (expandable, click to select/filter hub list); hub list below; auto-creates "My Hubs" collection on first load
   dashboard/hub/new/page.tsx         — create hub (template picker → form → ContentBlocksEditor)
   dashboard/hub/[id]/edit/page.tsx   — edit hub (Content tab + Settings tab)
@@ -48,7 +48,7 @@ app/
   h/[username]/[slug]/page.tsx       — public hub page (server component, passes to HubView)
 
 components/
-  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); template + mode + privacy pills; tags bottom-left, updated date bottom-right
+  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); template + mode + privacy pills (quiet metadata style: text-[11px] font-normal, 50-level tint backgrounds, stone palette for private/unlisted); tags bottom-left (same quiet style, gap-0.5), updated date bottom-right
   HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; RITUAL_BLOCKS + 10 other *_BLOCKS consts; tabs on edit (Content / Settings)
   HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
   ContentBlocksEditor.tsx  — block editor (add/edit/delete/reorder); green dot = has content, hollow ring = empty
@@ -206,10 +206,20 @@ Block rows show a **content indicator dot**: solid green (`bg-emerald-400`) if t
 
 ## Help system
 
-- `/help` — in-app help page (no auth required), linked from dashboard header
+- `/help` — in-app onboarding & inspiration page (no auth required), linked from dashboard header; server component (no `'use client'`); template cards use static Tailwind `borderClass` strings (e.g. `border-l-blue-500`) — no inline styles
 - `HELP.md` — developer reference in repo root
 
 Both files must stay template-agnostic in general sections. Template-specific content belongs only inside the per-template section.
+
+**`/help` page structure** (in order):
+1. What is QRMagNotes? — intro + callout box
+2. What people use it for — flex-wrap pill grid (12 popular uses)
+3. Templates — 2-col card grid with color-accent left border + block-by-block detail tables below
+4. How hubs work — mode cards (2-col) + privacy cards (3-col)
+5. Collections & Organization
+6. Block types — 2-col card grid with emoji
+7. Advanced styling — ceremonial text + collapse behavior
+8. Good to know — 6 tips
 
 ## Known Next.js 16 notes
 
