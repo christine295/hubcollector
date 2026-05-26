@@ -81,11 +81,27 @@ const TEMPLATES = [
       { label: 'Follow-Up', type: 'Checklist', note: '7 follow-up actions — journaling, cleanup, recording divination, watching for signs' },
     ],
   },
+  {
+    name: 'Recipe',
+    emoji: '🍳',
+    description: 'A recipe hub with 8 pre-built blocks covering photo, description, timing, ingredients, instructions, notes, video, and source. Orange theme. Attach to a cookbook, a kitchen item, or share a family recipe via QR code.',
+    themeColor: '#F97316',
+    blocks: [
+      { label: '(Photo)', type: 'Image', note: 'Recipe photo — upload directly or paste a public URL' },
+      { label: 'Description', type: 'Text', note: 'A short intro or context for the recipe' },
+      { label: 'At a Glance', type: 'Text', note: 'Pre-filled with Prep Time, Cook Time, and Servings fields' },
+      { label: 'Ingredients', type: 'Text', note: 'Full ingredients list — one per line or freeform' },
+      { label: 'Instructions', type: 'Text', note: 'Step-by-step method — freeform multiline text' },
+      { label: 'Notes', type: 'Text', note: 'Tips, substitutions, variations, or storage notes' },
+      { label: 'Video', type: 'Link', note: 'Optional — YouTube, TikTok, or any video URL' },
+      { label: 'Source', type: 'Link', note: 'Optional — original recipe URL or credit' },
+    ],
+  },
 ]
 
 const COLLAPSE_BEHAVIOR = [
   { rule: 'Open by default', examples: 'overview, step, note, invocation, words' },
-  { rule: 'Closed by default', examples: 'setup, correspondence, photo, memor, follow, playlist, voice' },
+  { rule: 'Closed by default', examples: 'setup, correspond, photo, memor, follow, playlist, voice' },
   { rule: 'Open by default (fallback)', examples: 'everything else' },
 ]
 
@@ -163,7 +179,9 @@ export default function HelpPage() {
         <section>
           <h2 className="text-lg font-semibold text-stone-800 mb-3">Default collapse state</h2>
           <p className="text-sm text-stone-600 leading-[1.65] mb-4 max-w-prose">
-            On the public hub view, sections are collapsible. The default open/closed state is determined by the block's label:
+            On the public hub view, every block is collapsible — visitors tap the section header to expand or collapse it.
+            The initial open or closed state when the page first loads is controlled automatically by keywords in the block's label.
+            You can change how any block opens by default simply by including or avoiding these words in its label.
           </p>
           <div className="border-t border-stone-100 divide-y divide-stone-100">
             {COLLAPSE_BEHAVIOR.map(row => (
@@ -174,7 +192,9 @@ export default function HelpPage() {
             ))}
           </div>
           <p className="text-xs text-stone-400 mt-3">
-            Label matching is case-insensitive and partial — "Invocation" matches "invocation," "Correspondences" matches "correspond," etc.
+            Matching is case-insensitive and partial — "Correspondences" matches "correspond," "Setup Steps" matches "setup," and so on.
+            If a label doesn't match any keyword, the block starts open.
+            To make a block start collapsed, rename its label to include one of the closed keywords (e.g. rename "Extra Notes" to "Setup Notes" — the word "setup" triggers closed).
           </p>
         </section>
 

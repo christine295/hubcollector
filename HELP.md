@@ -74,13 +74,17 @@ Matching is case-insensitive and partial (`isCeremonial()` in `components/HubVie
 
 ## Default collapse state
 
-On the public hub view, collapsible sections open/close based on label keyword matching (`defaultOpen()` in `components/HubView.tsx`):
+On the public hub view, every block is collapsible. The initial open/closed state when the page loads is determined by keyword matching against the block's label (`defaultOpen()` in `components/HubView.tsx`):
 
 | State | Label contains |
 |-------|---------------|
 | Open by default | `overview`, `step`, `note`, `invocation`, `words` |
 | Closed by default | `setup`, `correspond`, `photo`, `memor`, `follow`, `playlist`, `voice` |
 | Open (fallback) | everything else |
+
+Matching is case-insensitive and partial (`l.includes(...)`). A label not matching any keyword defaults to open.
+
+To control the collapse state of any block, include or avoid the relevant keyword in its label. For example, naming a block "Ritual Setup" starts it closed (matches `setup`); naming it "Ritual Steps" starts it open (matches `step`).
 
 ---
 
@@ -114,6 +118,23 @@ Creates **14 content blocks** via `Promise.all` to the API route (RLS requires s
 | 12 | Ritual Notes | text | Guided prompts: energy, shifts, signs, emotions, lessons, next time |
 | 13 | Photos | image | Altar or ritual photos |
 | 14 | Follow-Up | checklist | 7 actions: journal, offerings, cleanup, photos, tarot record, watch for signs, revisit |
+
+### Recipe (`recipe`)
+Pre-fills: title "My Recipe", orange theme (`#F97316`).  
+Creates **8 content blocks** via `Promise.all` to the API route.
+
+| # | Label | Type | Notes |
+|---|-------|------|-------|
+| 1 | *(no label)* | image | Recipe photo — upload or paste URL |
+| 2 | Description | text | Short intro or context |
+| 3 | At a Glance | text | Pre-filled: Prep Time, Cook Time, Servings |
+| 4 | Ingredients | text | Freeform multiline — one ingredient per line or freeform |
+| 5 | Instructions | text | Freeform multiline — step-by-step method |
+| 6 | Notes | text | Tips, substitutions, variations, storage |
+| 7 | Video | link | Optional — YouTube, TikTok, etc. |
+| 8 | Source | link | Optional — original recipe URL |
+
+All 8 blocks start **open by default** (none of their labels match a closed keyword).
 
 ---
 
