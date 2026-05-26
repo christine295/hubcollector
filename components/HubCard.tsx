@@ -71,13 +71,22 @@ export default function HubCard({
         {/* Left: info */}
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-gray-900 leading-snug">{hub.title}</h3>
-          <div className="mt-0.5 space-y-0.5">
-            {currentCollection && (
-              <p className="text-xs text-gray-400">📁 {currentCollection.title}</p>
+          <div className="mt-0.5">
+            {currentCollection ? (
+              <div className="flex gap-1.5 items-start">
+                <span className="text-xs text-gray-400 shrink-0 leading-tight">📁</span>
+                <div className="space-y-0.5">
+                  <p className="text-xs text-gray-400 leading-tight">{currentCollection.title}</p>
+                  <p className="text-[11px] text-gray-300 font-mono leading-tight">
+                    /h/{username}/{hub.slug}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-gray-300 font-mono leading-tight">
+                /h/{username}/{hub.slug}
+              </p>
             )}
-            <p className="text-[11px] text-gray-300 font-mono leading-tight">
-              /h/{username}/{hub.slug}
-            </p>
           </div>
         </div>
 
