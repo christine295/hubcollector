@@ -875,7 +875,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
                   }`}
                 >
                   <div className={`font-medium text-sm ${mode === 'landing' ? 'text-blue-700' : 'text-gray-700'}`}>
-                    Landing Page
+                    Interactive Page
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">Show a page with links</div>
                 </button>
@@ -887,7 +887,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
                   }`}
                 >
                   <div className={`font-medium text-sm ${mode === 'redirect' ? 'text-amber-700' : 'text-gray-700'}`}>
-                    Redirect
+                    Redirect Link
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">Send visitors to a URL</div>
                 </button>
