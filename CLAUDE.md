@@ -214,7 +214,7 @@ Both files must stay template-agnostic in general sections. Template-specific co
 
 **`/help` page structure** (in order):
 1. What is HubCollector? — intro + callout box
-2. What people use it for — flex-wrap pill grid (12 popular uses)
+2. What people use it for — flex-wrap pill grid (15 popular uses)
 3. Templates — 2-col card grid with color-accent left border + block-by-block detail tables below
 4. How hubs work — mode cards (2-col) + privacy cards (3-col)
 5. Collections & Organization
