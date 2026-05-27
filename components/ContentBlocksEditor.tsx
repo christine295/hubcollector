@@ -570,12 +570,16 @@ function AudioForm({ hubId, templateId, onSave, onCancel, initialData }: { hubId
     setError('')
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+      // iOS Safari supports audio/mp4; Chrome/Firefox support audio/webm
+      const mimeType = ['audio/mp4', 'audio/webm', 'audio/ogg'].find(
+        t => MediaRecorder.isTypeSupported(t)
+      ) ?? ''
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       recorderRef.current = recorder
       chunksRef.current = []
       recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' })
         setRecordedBlob(blob)
         setRecordedUrl(URL.createObjectURL(blob))
         stream.getTracks().forEach(t => t.stop())
@@ -584,8 +588,16 @@ function AudioForm({ hubId, templateId, onSave, onCancel, initialData }: { hubId
       setRecording(true)
       setRecordingTime(0)
       timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000)
-    } catch {
-      setError('Microphone access denied.')
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setError('Microphone access denied. Allow microphone access in your browser settings and try again.')
+      } else if (err instanceof DOMException && err.name === 'NotFoundError') {
+        setError('No microphone found on this device.')
+      } else if (err instanceof DOMException && (err.name === 'NotSupportedError' || err.name === 'SecurityError')) {
+        setError('Recording is not supported in this browser. Try uploading a file instead.')
+      } else {
+        setError('Could not start recording. Try uploading a file instead.')
+      }
     }
   }
 
