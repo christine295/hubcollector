@@ -67,6 +67,15 @@ const TEMPLATES: Template[] = [
     themeColor: '#14B8A6',
   },
   {
+    id: 'garden',
+    label: 'Garden Planner',
+    emoji: '🌱',
+    description: 'Plan and track your garden with planting lists, care tasks, and seasonal notes',
+    title: 'My Garden',
+    hubDescription: '',
+    themeColor: '#14B8A6',
+  },
+  {
     id: 'goal',
     label: 'Goal / Habit Tracker',
     emoji: '🎯',
@@ -74,6 +83,15 @@ const TEMPLATES: Template[] = [
     title: 'My Goal',
     hubDescription: '',
     themeColor: '#F43F5E',
+  },
+  {
+    id: 'grocery',
+    label: 'Grocery List',
+    emoji: '🛒',
+    description: 'A reusable household shopping list organized by category',
+    title: 'Grocery List',
+    hubDescription: '',
+    themeColor: '#22C55E',
   },
   {
     id: 'maintenance',
@@ -130,33 +148,6 @@ const TEMPLATES: Template[] = [
     themeColor: '#3B82F6',
   },
   {
-    id: 'box',
-    label: "What's in the Box?",
-    emoji: '📦',
-    description: 'Label a storage box with contents, location, and notes',
-    title: 'My Box',
-    hubDescription: '',
-    themeColor: '#64748B',
-  },
-  {
-    id: 'garden',
-    label: 'Garden Planner',
-    emoji: '🌱',
-    description: 'Plan and track your garden with planting lists, care tasks, and seasonal notes',
-    title: 'My Garden',
-    hubDescription: '',
-    themeColor: '#14B8A6',
-  },
-  {
-    id: 'grocery',
-    label: 'Grocery List',
-    emoji: '🛒',
-    description: 'A reusable household shopping list organized by category',
-    title: 'Grocery List',
-    hubDescription: '',
-    themeColor: '#22C55E',
-  },
-  {
     id: 'packing',
     label: 'Travel Packing List',
     emoji: '🧳',
@@ -171,6 +162,15 @@ const TEMPLATES: Template[] = [
     emoji: '🚗',
     description: "Track your car's specs, maintenance history, and key service contacts",
     title: 'My Vehicle',
+    hubDescription: '',
+    themeColor: '#64748B',
+  },
+  {
+    id: 'box',
+    label: "What's in the Box?",
+    emoji: '📦',
+    description: 'Label a storage box with contents, location, and notes',
+    title: 'My Box',
     hubDescription: '',
     themeColor: '#64748B',
   },
@@ -930,10 +930,17 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
           </button>
           <button
             type="button"
+            onClick={() => window.open(`/h/${username}/${slug}`, '_blank')}
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            View hub
+          </button>
+          <button
+            type="button"
             onClick={() => router.push(`/dashboard/hub/${createdHubId}/edit`)}
             className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Edit hub settings
+            Edit settings
           </button>
         </div>
       </div>
