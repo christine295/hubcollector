@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import HubCard from '@/components/HubCard'
+import SiteFooter from '@/components/SiteFooter'
 import { VERSION } from '@/lib/version'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -68,7 +69,7 @@ function ConfirmCollectionDeleteModal({ open, onClose, onDelete, onMove, collect
       <div className="bg-white rounded-xl p-6 shadow-xl w-full max-w-xs">
         <h3 className="font-semibold text-lg mb-2">Delete Collection</h3>
         <p className="text-gray-700 text-sm mb-4">
-          What should happen to the hubs in <span className="font-bold">{collectionTitle}</span>?
+          What should happen to the Hubs in <span className="font-bold">{collectionTitle}</span>?
         </p>
         <div className="flex flex-col gap-2">
           <button
@@ -76,14 +77,14 @@ function ConfirmCollectionDeleteModal({ open, onClose, onDelete, onMove, collect
             className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
             onClick={onDelete}
           >
-            Delete collection &amp; all hubs inside
+            Delete Collection &amp; all Hubs inside
           </button>
           <button
             type="button"
             className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg"
             onClick={onMove}
           >
-            Keep hubs, remove from collection
+            Keep Hubs, remove from Collection
           </button>
           <button
             type="button"
@@ -198,7 +199,7 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">
-            QRMagNotes
+            HubCollector™
             <span className="ml-2 text-xs font-normal text-gray-400">{VERSION}</span>
           </h1>
           <div className="flex items-center gap-4">
@@ -224,7 +225,7 @@ export default function DashboardPage() {
         {/* Stats + primary CTA */}
         <div className="flex items-center justify-between mb-5">
           <p className="text-sm text-gray-400">
-            {!loading && `${totalHubs} ${totalHubs === 1 ? 'hub' : 'hubs'} · ${totalFolders} ${totalFolders === 1 ? 'collection' : 'collections'}`}
+            {!loading && `${totalHubs} ${totalHubs === 1 ? 'Hub' : 'Hubs'} · ${totalFolders} ${totalFolders === 1 ? 'Collection' : 'Collections'}`}
           </p>
           <Link
             href="/dashboard/hub/new"
@@ -240,7 +241,7 @@ export default function DashboardPage() {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search hubs by title, slug, or tag…"
+            placeholder="Search Hubs by title, slug, or tag…"
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {tagFilter && (
@@ -290,7 +291,7 @@ export default function DashboardPage() {
                   onClick={() => setFolderFilter(null)}
                   className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
                 >
-                  Show all hubs ×
+                  Show all Hubs ×
                 </button>
               )}
             </div>
@@ -317,7 +318,7 @@ export default function DashboardPage() {
                           {folder.title}
                         </span>
                         <span className={`text-xs shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-400'}`}>
-                          {count} {count === 1 ? 'hub' : 'hubs'}
+                          {count} {count === 1 ? 'Hub' : 'Hubs'}
                         </span>
                       </div>
 
@@ -342,7 +343,7 @@ export default function DashboardPage() {
                                 onClick={() => setOpenCollectionMenu(null)}
                                 className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                               >
-                                + Add hub
+                                + Add Hub
                               </Link>
                               <button
                                 type="button"
@@ -391,7 +392,7 @@ export default function DashboardPage() {
                         Uncollected
                       </span>
                       <span className={`text-xs ${isActive ? 'text-blue-400' : 'text-gray-400'}`}>
-                        {uncollectedCount} {uncollectedCount === 1 ? 'hub' : 'hubs'}
+                        {uncollectedCount} {uncollectedCount === 1 ? 'Hub' : 'Hubs'}
                       </span>
                     </div>
                   </div>
@@ -435,7 +436,7 @@ export default function DashboardPage() {
                   onClick={() => setShowCreateFolder(true)}
                   className="w-full rounded-xl border border-dashed border-gray-200 px-4 py-2.5 text-sm text-gray-400 hover:text-gray-500 hover:border-gray-300 transition-colors text-left"
                 >
-                  + New collection
+                  + New Collection
                 </button>
               )}
             </div>
@@ -448,9 +449,9 @@ export default function DashboardPage() {
         ) : allHubs.length === 0 ? (
           <div className="text-center py-20 px-4">
             <div className="text-5xl mb-4">✨</div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Create a QR page for anything</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Create a Hub for anything</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-xs mx-auto">
-              Create a QR page (&ldquo;Hub&rdquo;) for anything you want to remember, organize, or share.
+              Attach a QR code to anything you want to remember, organize, or share — and update the content anytime.
             </p>
             <Link
               href="/dashboard/hub/new"
@@ -464,7 +465,7 @@ export default function DashboardPage() {
             {/* Hubs section label */}
             <div className="mb-2">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                {activeCollection ? activeCollection.title : folderFilter === '__none__' ? 'Uncollected' : 'All hubs'}
+                {activeCollection ? activeCollection.title : folderFilter === '__none__' ? 'Uncollected' : 'All Hubs'}
                 {filteredHubs.length > 0 && (
                   <span className="font-normal ml-1.5">({filteredHubs.length})</span>
                 )}
@@ -485,7 +486,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <div className="text-center py-12 text-gray-400 text-sm">
-                  No hubs match your search.
+                  No Hubs match your search.
                 </div>
               )}
             </div>
@@ -494,13 +495,7 @@ export default function DashboardPage() {
 
       </main>
 
-      <footer className="text-center py-8 text-[0.6875rem] text-gray-400">
-        © 2026 QRMagNotes | Developed by{' '}
-        <a href="https://websketching.com" target="_blank" rel="noopener noreferrer"
-          className="hover:text-gray-600 transition-colors underline underline-offset-2">
-          Websketching
-        </a>
-      </footer>
+      <SiteFooter />
 
       <EditCollectionModal
         open={editFolderOpen}

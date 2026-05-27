@@ -49,7 +49,7 @@ function LoginForm() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-full max-w-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
-        <p className="text-gray-500 text-sm mb-8">Sign in to your QRMagNotes account</p>
+        <p className="text-gray-500 text-sm mb-8">Sign in to your HubCollector account</p>
 
         <button
           onClick={handleGoogleLogin}

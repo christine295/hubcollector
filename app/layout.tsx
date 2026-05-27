@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'QRMagNotes',
-  description: 'Household coordination hub built around persistent QR codes',
+  title: 'HubCollector',
+  description: 'Create living digital pages connected to QR codes — organized, updatable, and always accessible.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

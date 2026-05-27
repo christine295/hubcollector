@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SiteFooter from '@/components/SiteFooter'
 
 const POPULAR_USES = [
   { emoji: '🍳', label: 'QR recipe cards' },
@@ -55,6 +56,11 @@ const BLOCK_TYPES = [
     name: 'Timeline',
     emoji: '📅',
     description: 'A vertical sequence of dated entries with accent-color markers. Each entry has an optional date and text description.',
+  },
+  {
+    name: 'Hub Collector',
+    emoji: '🔗',
+    description: 'A public button menu built from a collection of hubs. Each hub appears as a tappable card with title and description — a Linktree-style navigation page across your content.',
   },
 ]
 
@@ -116,6 +122,24 @@ const TEMPLATES = [
     ],
   },
   {
+    name: 'Garden Planner',
+    emoji: '🪴',
+    tagline: 'Track plantings, tasks, and garden observations.',
+    description: 'Plot overview, planting checklist, care tasks, and growth log.',
+    borderClass: 'border-l-teal-500',
+    blocks: [
+      { label: 'Garden Overview', type: 'Text', note: 'Location, sunlight, soil notes, goals, seasonal plans' },
+      { label: 'Planting List', type: 'Checklist', note: 'Tomatoes, basil, peppers, lettuce, flowers, herbs' },
+      { label: 'Companion Planting Notes', type: 'Text', note: 'What grows together, what to keep apart' },
+      { label: 'Garden Log', type: 'Timeline', note: 'Seeds started, transplanted, fertilized, first harvest, pest issues' },
+      { label: 'Garden Tasks', type: 'Checklist', note: 'Water, weed, prune, fertilize, check pests, harvest' },
+      { label: 'Garden photos', type: 'Image', note: '' },
+      { label: 'Quick Garden Observation', type: 'Audio', note: 'Voice note recorded in the garden' },
+      { label: 'Planting Guide', type: 'Link', note: 'Optional external planting guide or resource' },
+      { label: 'Harvest Notes', type: 'Text', note: 'Yield, flavor, what to grow again' },
+    ],
+  },
+  {
     name: 'Goal / Habit Tracker',
     emoji: '🎯',
     tagline: 'Define a goal, track habits, and log milestones.',
@@ -128,6 +152,25 @@ const TEMPLATES = [
       { label: 'Progress Update', type: 'Audio', note: 'Quick voice check-in on how the goal is going' },
       { label: 'Related Resource', type: 'Link', note: 'A book, course, article, or tool' },
       { label: 'Wins & Challenges', type: 'Text', note: "What's working and what isn't" },
+    ],
+  },
+  {
+    name: 'Grocery List',
+    emoji: '🛒',
+    tagline: 'Organized shopping list by category with meal plan notes.',
+    description: 'Meal plan, category checklists, and store notes.',
+    borderClass: 'border-l-green-500',
+    blocks: [
+      { label: 'Meal Plan Notes', type: 'Text', note: 'Meals for the week, recipe reminders, household requests' },
+      { label: 'Produce', type: 'Checklist', note: 'Lettuce/greens, tomatoes, onions, potatoes, fruit' },
+      { label: 'Meat & Seafood', type: 'Checklist', note: 'Chicken, ground beef, lunch meat, fish/seafood' },
+      { label: 'Dairy & Eggs', type: 'Checklist', note: 'Milk, eggs, cheese, yogurt, butter' },
+      { label: 'Pantry', type: 'Checklist', note: 'Pasta/rice, canned goods, bread, cereal, snacks' },
+      { label: 'Spices & Baking', type: 'Checklist', note: 'Salt/pepper, garlic powder, flour, sugar, baking items' },
+      { label: 'Frozen', type: 'Checklist', note: 'Frozen vegetables, frozen meals, ice cream' },
+      { label: 'Household', type: 'Checklist', note: 'Paper towels, toilet paper, cleaning supplies, trash bags' },
+      { label: 'Recipe Link', type: 'Link', note: 'Optional — link to a recipe being shopped for' },
+      { label: 'Store Notes / Coupons', type: 'Text', note: 'Coupon reminders, store-specific notes, brand preferences' },
     ],
   },
   {
@@ -145,6 +188,17 @@ const TEMPLATES = [
       { label: 'Service Contact', type: 'Phone', note: 'Tap-to-call repair line' },
       { label: 'Product Page', type: 'Link', note: 'Optional product or parts page' },
       { label: 'Additional Notes', type: 'Text', note: 'Other notes about the item or area' },
+    ],
+  },
+  {
+    name: 'Hub Collector',
+    emoji: '🔗',
+    tagline: 'A public-facing button menu of hubs from a collection.',
+    description: 'Turns a collection into a Linktree-style page. Add intro text and link to one or more collections.',
+    borderClass: 'border-l-blue-500',
+    blocks: [
+      { label: 'Introduction', type: 'Text', note: 'Optional intro text shown above the hub menu' },
+      { label: 'Hub Menu', type: 'Hub Collector', note: 'Select a collection — hubs appear as tappable cards' },
     ],
   },
   {
@@ -238,6 +292,44 @@ const TEMPLATES = [
     ],
   },
   {
+    name: 'Travel Packing List',
+    emoji: '🧳',
+    tagline: 'Packing checklists, trip details, and travel documents.',
+    description: 'Essentials, clothing, toiletries, tech, and travel documents by category.',
+    borderClass: 'border-l-amber-500',
+    blocks: [
+      { label: 'Trip Details', type: 'Text', note: 'Destination, dates, weather, travel companions, notes' },
+      { label: 'Essentials', type: 'Checklist', note: 'Wallet, ID/passport, keys, phone, charger, medications' },
+      { label: 'Clothing', type: 'Checklist', note: 'Shirts, pants/shorts, pajamas, socks, underwear, shoes, jacket' },
+      { label: 'Toiletries', type: 'Checklist', note: 'Toothbrush, toothpaste, shampoo, deodorant, hairbrush, makeup/skincare' },
+      { label: 'Tech', type: 'Checklist', note: 'Phone charger, laptop/tablet, headphones, power bank, camera' },
+      { label: 'Travel Documents', type: 'Checklist', note: 'Tickets, hotel confirmation, rental car, insurance cards, emergency contacts' },
+      { label: 'Itinerary / Tickets', type: 'File', note: 'Upload PDF or paste URL' },
+      { label: 'Hotel / Airbnb', type: 'Link', note: 'Booking confirmation link' },
+      { label: 'Map / Directions', type: 'Link', note: 'Maps, navigation, or offline directions' },
+      { label: 'Emergency Contact', type: 'Phone', note: 'Tap-to-call emergency contact number' },
+      { label: 'Last-Minute Reminders', type: 'Text', note: 'Things to do before leaving or on the way' },
+    ],
+  },
+  {
+    name: 'Vehicle Maintenance',
+    emoji: '🚗',
+    tagline: 'Track oil changes, repairs, specs, and service contacts.',
+    description: 'Vehicle details, maintenance log, routine checklist, and service contacts.',
+    borderClass: 'border-l-slate-500',
+    blocks: [
+      { label: 'Vehicle Details', type: 'Text', note: 'Year, make, model/trim, VIN, license plate, color' },
+      { label: 'Important Specs', type: 'Text', note: 'Oil type, tire size, wiper blade size, battery type, preferred fuel' },
+      { label: 'Maintenance Log', type: 'Timeline', note: 'Oil changes, tire rotations, inspections, repairs' },
+      { label: 'Routine Maintenance', type: 'Checklist', note: 'Oil change, tire pressure, tire rotation, wipers, air filter, cabin filter, brakes, inspection' },
+      { label: 'Mechanic', type: 'Phone', note: 'Tap-to-call mechanic' },
+      { label: 'Roadside Assistance', type: 'Phone', note: 'Tap-to-call roadside line' },
+      { label: 'Insurance / Registration', type: 'File', note: 'Upload or link insurance card and registration' },
+      { label: 'Receipts / damage photos', type: 'Image', note: '' },
+      { label: 'Notes for Next Service', type: 'Text', note: 'What to mention, check, or fix at the next appointment' },
+    ],
+  },
+  {
     name: "What's in the Box?",
     emoji: '📦',
     tagline: 'Label any storage box with a contents list and photo.',
@@ -254,6 +346,23 @@ const TEMPLATES = [
       { label: 'Additional Notes', type: 'Text', note: 'Condition, fragile warnings, last opened date' },
     ],
   },
+  {
+    name: 'Workout Tracker',
+    emoji: '💪',
+    tagline: 'Log workouts, track PRs, and stay consistent.',
+    description: 'Goal, warmup, exercises, progress log, and session notes.',
+    borderClass: 'border-l-rose-500',
+    blocks: [
+      { label: 'Workout Goal', type: 'Text', note: 'Strength, endurance, mobility, weight loss, consistency, recovery' },
+      { label: 'Warmup', type: 'Checklist', note: 'Light cardio, dynamic stretching, mobility work, warmup sets' },
+      { label: 'Workout Exercises', type: 'Checklist', note: 'Exercise 1–5 with sets/reps/weight placeholder' },
+      { label: 'Current Weights / PRs', type: 'Text', note: 'Track weights, reps, PRs, and progress notes' },
+      { label: 'Workout Log', type: 'Timeline', note: 'Log each session — date, what was completed, how it went' },
+      { label: 'Workout Playlist or Video', type: 'Link', note: 'Spotify playlist or YouTube workout video' },
+      { label: 'Quick Gym Note', type: 'Audio', note: 'Voice note recorded at the gym' },
+      { label: 'Post-Workout Notes', type: 'Text', note: 'How it felt, what to change next time' },
+    ],
+  },
 ]
 
 const CEREMONIAL_LABELS = ['invocation', 'words to speak', 'quote', 'passage', 'poem', 'prayer', 'sacred']
@@ -267,21 +376,21 @@ export default function HelpPage() {
             <Link href="/dashboard" className="text-sm text-stone-400 hover:text-stone-700 transition-colors">
               ← Dashboard
             </Link>
-            <h1 className="text-base font-semibold text-stone-900">Help & Reference</h1>
+            <h1 className="text-base font-semibold text-stone-900">HubCollector™ — Help & Reference</h1>
           </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-5 py-10 space-y-14">
 
-        {/* What is QRMagNotes? */}
+        {/* What is HubCollector? */}
         <section>
-          <h2 className="text-lg font-semibold text-stone-800 mb-4">What is QRMagNotes?</h2>
+          <h2 className="text-lg font-semibold text-stone-800 mb-4">What is HubCollector™?</h2>
           <div className="text-stone-600 leading-[1.75] space-y-3 max-w-prose text-sm">
             <p>
-              QRMagNotes lets you create living digital pages connected to QR codes.
+              HubCollector lets you create living digital pages connected to QR codes.
               Organize recipes, rituals, pet profiles, artwork, journals, manuals, memories, and more
-              into collections you can update anytime — without reprinting the code.
+              into Collections you can update anytime — without reprinting the code.
             </p>
             <p>
               Attach a QR code to anything physical: a storage box, a plant pot, a piece of art,
@@ -364,10 +473,10 @@ export default function HelpPage() {
 
         {/* How hubs work */}
         <section>
-          <h2 className="text-lg font-semibold text-stone-800 mb-4">How hubs work</h2>
+          <h2 className="text-lg font-semibold text-stone-800 mb-4">How Hubs work</h2>
           <div className="text-stone-600 leading-[1.75] space-y-3 max-w-prose text-sm">
             <p>
-              Each hub is a page with a permanent, printable URL. You create the hub, print the QR code,
+              Each Hub is a page with a permanent, printable URL. You create the Hub, print the QR code,
               and attach it to something — a box, a wall, a jar, a frame.
               The QR always points to the same address, so you can keep editing the content forever.
             </p>
@@ -402,7 +511,7 @@ export default function HelpPage() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-stone-400 mt-2">New hubs default to Private.</p>
+          <p className="text-xs text-stone-400 mt-2">New Hubs default to Private.</p>
         </section>
 
         {/* Collections & Organization */}
@@ -410,18 +519,18 @@ export default function HelpPage() {
           <h2 className="text-lg font-semibold text-stone-800 mb-4">Collections &amp; Organization</h2>
           <div className="text-stone-600 leading-[1.75] space-y-3 max-w-prose text-sm">
             <p>
-              Collections are curated groups of hubs — a way to organise your archive into meaningful spaces.
+              Collections are curated groups of Hubs — a way to organise your archive into meaningful spaces.
               Think of them less like folders and more like shelves: a shelf for home, a shelf for creative work, a shelf for rituals.
             </p>
             <p>
-              <strong>Browsing by collection:</strong> Click a collection card on the dashboard to filter the hub list to just that collection. Click again to return to all hubs. The collection&apos;s description appears when it&apos;s selected — add one via the collection&apos;s ⋮ menu.
+              <strong>Browsing by Collection:</strong> Click a Collection card on the dashboard to filter the Hub list to just that Collection. Click again to return to all Hubs. The Collection&apos;s description appears when it&apos;s selected — add one via the Collection&apos;s ⋮ menu.
             </p>
             <p>
-              <strong>Assigning a hub:</strong> Open the hub card&apos;s ⋮ menu and choose <em>Move to collection</em>.
-              You can also set the collection during hub creation, or from the hub&apos;s Settings tab.
+              <strong>Assigning a Hub:</strong> Open the Hub card&apos;s ⋮ menu and choose <em>Move to Collection</em>.
+              You can also set the Collection during Hub creation, or from the Hub&apos;s Settings tab.
             </p>
             <p>
-              <strong>Uncollected hubs</strong> appear in their own filter at the bottom of the collections list — so nothing gets lost.
+              <strong>Uncollected Hubs</strong> appear in their own filter at the bottom of the Collections list — so nothing gets lost.
             </p>
           </div>
         </section>
@@ -430,7 +539,7 @@ export default function HelpPage() {
         <section>
           <h2 className="text-lg font-semibold text-stone-800 mb-2">Block types</h2>
           <p className="text-sm text-stone-500 leading-[1.65] mb-5 max-w-prose">
-            Every hub is built from blocks. Mix and match as many as you need — add, reorder, and remove at any time.
+            Every Hub is built from blocks. Mix and match as many as you need — add, reorder, and remove at any time.
           </p>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {BLOCK_TYPES.map(b => (
@@ -502,8 +611,8 @@ export default function HelpPage() {
               or paste any public URL. Uploaded images are stored securely in Supabase Storage.
             </li>
             <li>
-              <strong>Hub type can be set anytime.</strong> Even hubs created from Blank can get a template badge —
-              open Settings and choose a hub type. This only updates the label; it doesn&apos;t add or remove blocks.
+              <strong>Hub type can be set anytime.</strong> Even Hubs created from Blank can get a template badge —
+              open Settings and choose a Hub type. This only updates the label; it doesn&apos;t add or remove blocks.
             </li>
             <li>
               <strong>Content indicator dots.</strong> In the block editor, a green dot means the block has content;
@@ -514,13 +623,7 @@ export default function HelpPage() {
 
       </main>
 
-      <footer className="text-center py-10 text-[0.6875rem] text-stone-400">
-        © 2026 QRMagNotes | Developed by{' '}
-        <a href="https://websketching.com" target="_blank" rel="noopener noreferrer"
-          className="hover:text-stone-600 transition-colors underline underline-offset-2">
-          Websketching
-        </a>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

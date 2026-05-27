@@ -1,4 +1,4 @@
-# QRMagNotes — Help & Reference
+# HubCollector — Help & Reference
 
 ## How it works
 
@@ -27,6 +27,7 @@ Each hub has a permanent URL at `/h/[username]/[slug]`. You print a QR code poin
 | `file` | Downloadable file from any public URL. |
 | `image` | Inline photo from any public URL. Optional caption. |
 | `timeline` | Vertical sequence of dated events with accent-color dot markers. |
+| `collection_menu` | Public button menu of hubs from a collection. Data: `{ collection_id, excluded_hub_ids[] }`. Renders via `collectionHubs` prop pre-fetched server-side in page.tsx. |
 
 ### Data shape per block type
 
@@ -56,6 +57,9 @@ All blocks are stored in `content_blocks` as `type` + `data` (JSONB) + `sort_ord
 
 // timeline
 { "label": "Service History", "events": [{ "id": "e1", "date": "2024-01-15", "text": "Oil change" }] }
+
+// collection_menu
+{ "collection_id": "uuid", "excluded_hub_ids": ["uuid", "uuid"] }
 ```
 
 ---
@@ -370,6 +374,19 @@ Creates **8 content blocks** via `Promise.all` to the API route.
 | 6 | Workout Playlist or Video | link | Spotify playlist or YouTube workout video |
 | 7 | Quick Gym Note | audio | Voice note recorded at the gym |
 | 8 | Post-Workout Notes | text | Pre-filled: how it felt, what to change next time |
+
+### Hub Collector (`hub_collector`)
+Pre-fills: title "My Hub Collection", blue theme (`#3B82F6`).  
+Creates **2 content blocks** via `Promise.all` to the API route.
+
+| # | Label | Type | Notes |
+|---|-------|------|-------|
+| 1 | Introduction | text | Empty — optional intro text above the hub menu |
+| 2 | Hub Menu | collection_menu | `collection_id` empty — user selects a collection in the block editor |
+
+**Architecture:** `collection_menu` blocks store `{ collection_id, excluded_hub_ids[] }` in JSONB. The server component (`page.tsx`) pre-fetches hubs for each `collection_menu` block and passes them to `HubView` via `collectionHubs: Record<string, any[]>` keyed by block ID. Opt-out model: all hubs in the collection appear by default; user unchecks to exclude. RLS filters private hubs automatically for non-owners. Multiple `collection_menu` blocks in one hub = multiple separate menus.
+
+**Privacy notes in editor:** Private hubs show an amber warning; unlisted hubs show a gray label. These labels are for the owner's awareness only — on the public view, RLS handles filtering.
 
 ---
 

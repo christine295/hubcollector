@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import SiteFooter from '@/components/SiteFooter'
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
       {/* Owner bar */}
       {isOwner && (
         <div className="bg-white/90 backdrop-blur-sm border-b border-stone-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-20">
-          <span className="text-[0.6875rem] text-stone-400 tracking-[0.05em] uppercase">Your hub</span>
+          <span className="text-[0.6875rem] text-stone-400 tracking-[0.05em] uppercase">Your Hub</span>
           <a href={`/dashboard/hub/${hub.id}/edit`}
             className="text-xs font-medium text-stone-600 border border-stone-200 rounded-lg px-3 py-1.5 hover:bg-stone-50 transition-colors"
           >
@@ -320,7 +321,7 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
                 if (menuHubs.length === 0) {
                   return isOwner ? (
                     <div key={block.id} className="py-4 text-sm text-stone-400 italic">
-                      Hub Collector — no visible hubs in this collection yet.
+                      Hub Collector — no visible Hubs in this Collection yet.
                     </div>
                   ) : null
                 }
@@ -416,13 +417,7 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
         )}
       </main>
 
-      <footer className="text-center py-10 text-[0.6875rem] text-stone-400">
-        © 2026 QRMagNotes | Developed by{' '}
-        <a href="https://websketching.com" target="_blank" rel="noopener noreferrer"
-          className="hover:text-stone-400 transition-colors underline underline-offset-2">
-          Websketching
-        </a>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

@@ -144,14 +144,14 @@ export default function HubCard({
                     onClick={e => e.stopPropagation()}
                     className="px-4 py-2.5 border-t border-gray-100"
                   >
-                    <p className="text-xs text-gray-400 mb-1.5">Move to collection</p>
+                    <p className="text-xs text-gray-400 mb-1.5">Move to Collection</p>
                     <select
                       value={hub.collection_id ?? ''}
                       onChange={e => { onFolderChange?.(hub.id, e.target.value || null); setMenuOpen(false) }}
-                      title="Move to collection"
+                      title="Move to Collection"
                       className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400"
                     >
-                      <option value="">No collection</option>
+                      <option value="">No Collection</option>
                       {folders.map(f => (
                         <option key={f.id} value={f.id}>{f.title}</option>
                       ))}

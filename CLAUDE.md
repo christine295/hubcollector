@@ -1,4 +1,4 @@
-# QRMagNotes
+# HubCollector
 
 A QR-code hub platform for attaching evolving digital content to physical objects, spaces, and experiences. A user creates a hub with a stable URL (`/h/[slug]`), prints the QR code, and places it on something physical. The content behind the QR can be updated at any time without reprinting.
 
@@ -86,14 +86,14 @@ Tables — all with RLS enabled:
 ### content_blocks type constraint
 
 ```sql
-type text not null check (type in ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note'))
+type text not null check (type in ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note', 'collection_menu'))
 ```
 
 If this constraint is wrong in your Supabase instance, fix it:
 ```sql
 ALTER TABLE public.content_blocks DROP CONSTRAINT content_blocks_type_check;
 ALTER TABLE public.content_blocks ADD CONSTRAINT content_blocks_type_check
-  CHECK (type IN ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note'));
+  CHECK (type IN ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note', 'collection_menu'));
 ```
 
 ### RLS for content_blocks
@@ -141,10 +141,11 @@ Each block has `type`, `data` (JSONB), and `sort_order`. Supported types:
 | `file` | `{ label, url }` |
 | `image` | `{ url, caption }` |
 | `timeline` | `{ label, events: [{ id, date, text }] }` |
+| `collection_menu` | `{ collection_id: string, excluded_hub_ids: string[] }` |
 
 ## Public view (HubView.tsx)
 
-`app/h/[username]/[slug]/page.tsx` is a server component that looks up the profile by username, then the hub by user_id + slug, and passes props to `HubView`. All interactive rendering is in `components/HubView.tsx` (client component).
+`app/h/[username]/[slug]/page.tsx` is a server component that looks up the profile by username, then the hub by user_id + slug, and passes props to `HubView`. It also pre-fetches `collectionHubs: Record<string, any[]>` (keyed by block ID) for any `collection_menu` blocks and passes it as a prop. All interactive rendering is in `components/HubView.tsx` (client component). HubView never fetches hub data directly.
 
 **Design system:**
 - Background: `#FAF9F7` (warm cream) via `bg-[#FAF9F7]`
@@ -169,7 +170,7 @@ Any `text` block whose label contains `invocation`, `words to speak`, `quote`, `
 
 Defined in `TEMPLATES` array in `components/HubForm.tsx`. Template picker shown before create form. All blocks are created via `BLOCKS_BY_TEMPLATE` record in `handleSubmit` — no per-template branching needed.
 
-**12 templates:** Blank, Artwork Archive (8 blocks), Ritual (14 blocks), Recipe (8 blocks), What's in the Box? (8 blocks), Plant Profile (8 blocks), Home Maintenance Log (8 blocks), Travel Journal (7 blocks), Pet Profile (8 blocks), Book / Reading Notes (7 blocks), Goal / Habit Tracker (6 blocks), Daily Reflection / Journal (6 blocks).
+**18 templates (alphabetical, Blank first):** Blank, Artwork Archive (8 blocks), Book / Reading Notes (7 blocks), Daily Reflection / Journal (6 blocks), Garden Planner (9 blocks), Goal / Habit Tracker (6 blocks), Grocery List (10 blocks), Home Maintenance Log (8 blocks), Hub Collector (2 blocks), Pet Profile (8 blocks), Plant Profile (8 blocks), Recipe (8 blocks), Ritual (14 blocks), Travel Journal (7 blocks), Travel Packing List (11 blocks), Vehicle Maintenance (9 blocks), What's in the Box? (8 blocks), Workout Tracker (8 blocks).
 
 See `HELP.md` for the full block-by-block breakdown of each template.
 
@@ -212,7 +213,7 @@ Block rows show a **content indicator dot**: solid green (`bg-emerald-400`) if t
 Both files must stay template-agnostic in general sections. Template-specific content belongs only inside the per-template section.
 
 **`/help` page structure** (in order):
-1. What is QRMagNotes? — intro + callout box
+1. What is HubCollector? — intro + callout box
 2. What people use it for — flex-wrap pill grid (12 popular uses)
 3. Templates — 2-col card grid with color-accent left border + block-by-block detail tables below
 4. How hubs work — mode cards (2-col) + privacy cards (3-col)
@@ -245,7 +246,8 @@ alter table public.hubs add column if not exists tags text[] not null default '{
 alter table public.hubs add column if not exists template_id text;
 ALTER TABLE public.content_blocks DROP CONSTRAINT IF EXISTS content_blocks_type_check;
 ALTER TABLE public.content_blocks ADD CONSTRAINT content_blocks_type_check
-  CHECK (type IN ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note'));
+  CHECK (type IN ('text', 'image', 'audio', 'file', 'link', 'phone', 'checklist', 'timeline', 'note', 'collection_menu'));
+-- collection_menu added for Hub Collector feature (2026-05-27)
 ```
 
 **Still needs to be run** (username + per-user slug uniqueness):

@@ -63,7 +63,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-full max-w-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Create an account</h1>
-        <p className="text-gray-500 text-sm mb-8">Get started with QRMagNotes</p>
+        <p className="text-gray-500 text-sm mb-8">Get started with HubCollector</p>
 
         <button
           onClick={handleGoogleSignup}
@@ -111,7 +111,14 @@ export default function SignupPage() {
           <p className="text-xs text-center text-gray-400">Email signup coming soon — use Google for now</p>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-5 leading-relaxed">
+          By creating an account, you agree to our{' '}
+          <Link href="/terms" className="underline hover:text-gray-600 transition-colors">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="underline hover:text-gray-600 transition-colors">Privacy Policy</Link>.
+        </p>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
           Already have an account?{' '}
           <Link href="/login" className="text-blue-600 hover:underline font-medium">
             Sign in
