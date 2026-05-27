@@ -14,6 +14,9 @@ const POPULAR_USES = [
   { emoji: '📋', label: 'Equipment manuals' },
   { emoji: '📖', label: 'Book notes & reading logs' },
   { emoji: '🎯', label: 'Goal & habit trackers' },
+  { emoji: '💪', label: 'Workout & fitness tracking' },
+  { emoji: '🚗', label: 'Vehicle maintenance logs' },
+  { emoji: '🛒', label: 'Grocery & meal planning' },
 ]
 
 const BLOCK_TYPES = [
@@ -388,9 +391,10 @@ export default function HelpPage() {
           <h2 className="text-lg font-semibold text-stone-800 mb-4">What is HubCollector™?</h2>
           <div className="text-stone-600 leading-[1.75] space-y-3 max-w-prose text-sm">
             <p>
-              HubCollector lets you create living digital pages connected to QR codes.
-              Organize recipes, rituals, pet profiles, artwork, journals, manuals, memories, and more
-              into Collections you can update anytime — without reprinting the code.
+              HubCollector lets you create living digital pages (&ldquo;Hubs&rdquo;) that can be accessed through
+              the app, a saved link, or a QR code attached to a real-world object. Organize recipes,
+              rituals, pet profiles, artwork, journals, manuals, memories, and more into Collections
+              you can update anytime — without reprinting the code.
             </p>
             <p>
               Attach a QR code to anything physical: a storage box, a plant pot, a piece of art,
@@ -400,7 +404,7 @@ export default function HelpPage() {
           <div className="mt-5 rounded-xl bg-stone-50 border border-stone-200 px-5 py-4">
             <p className="text-sm text-stone-700 leading-[1.7]">
               <span className="text-stone-400 mr-2 select-none">✦</span>
-              The content behind the QR can be updated at any time — without reprinting the code.
+              HubCollector helps you remember not just information — but where things are, how things work, and why they mattered.
             </p>
           </div>
         </section>

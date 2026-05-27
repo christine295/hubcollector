@@ -106,7 +106,7 @@ const TEMPLATES: Template[] = [
     id: 'hub_collector',
     label: 'Hub Collector',
     emoji: '🔗',
-    description: 'A public button menu linking to hubs from your collections — like Linktree for your QR content',
+    description: 'A public button menu linking to Hubs from your Collections — like Linktree for your QR content',
     title: 'My Hub Collection',
     hubDescription: '',
     themeColor: '#3B82F6',
@@ -1002,18 +1002,18 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
 
         {activeTab === 'settings' && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Folder */}
+            {/* Collection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Folder</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Collection</label>
               <div className="flex gap-2">
                 <select
                   value={collectionId ?? ''}
                   onChange={e => setCollectionId(e.target.value || null)}
-                  title="Folder"
+                  title="Collection"
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={collectionsLoading}
                 >
-                  <option value="">No folder</option>
+                  <option value="">No Collection</option>
                   {collections.map((c: Collection) => (
                     <option key={c.id} value={c.id}>{c.title}</option>
                   ))}
@@ -1033,7 +1033,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
                     value={newCollectionTitle}
                     onChange={e => setNewCollectionTitle(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); createCollection() } }}
-                    placeholder="Folder name"
+                    placeholder="Collection name"
                     className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autoFocus
                   />
@@ -1077,7 +1077,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hub title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Hub Title</label>
               <input
                 type="text"
                 required
@@ -1307,7 +1307,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Hub title</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Hub Title</label>
         <input
           type="text"
           required
@@ -1340,20 +1340,20 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
         )}
       </div>
 
-      {/* Folder */}
+      {/* Collection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Folder <span className="text-gray-400 font-normal">(optional)</span>
+          Collection <span className="text-gray-400 font-normal">(optional)</span>
         </label>
         <div className="flex gap-2">
           <select
             value={collectionId ?? ''}
             onChange={e => setCollectionId(e.target.value || null)}
-            title="Folder"
+            title="Collection"
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={collectionsLoading}
           >
-            <option value="">No folder</option>
+            <option value="">No Collection</option>
             {collections.map((c: Collection) => (
               <option key={c.id} value={c.id}>{c.title}</option>
             ))}
@@ -1373,7 +1373,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
               value={newCollectionTitle}
               onChange={e => setNewCollectionTitle(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); createCollection() } }}
-              placeholder="Folder name"
+              placeholder="Collection name"
               className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
@@ -1572,7 +1572,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId }: 
           disabled={isPending}
           className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
         >
-          {isPending ? 'Saving…' : 'Create hub'}
+          {isPending ? 'Saving…' : 'Create Hub'}
         </button>
         <button
           type="button"
