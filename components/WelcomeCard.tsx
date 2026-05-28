@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 
 const LABEL_STYLES: Record<string, string> = {
   'Welcome':             'bg-teal-50 text-teal-700 border border-teal-200',
@@ -111,6 +112,7 @@ export default function WelcomeCard({
   allHubs: any[]
   onCreateCollection?: () => void
 }) {
+  const [photoError, setPhotoError] = useState(false)
   const allHubsPrivate = hubCount > 0 && allHubs.every(h => h.privacy_mode === 'private')
   const hasHubCollector = allHubs.some(h => h.template_id === 'hub_collector')
   const hasQuickAccessHub = allHubs.some(h =>
@@ -145,11 +147,18 @@ export default function WelcomeCard({
       {/* Founder layout: photo + text side by side */}
       {state.isFounder ? (
         <div className="flex items-start gap-3 mb-4">
-          <img
-            src="/christine.jpg"
-            alt="Christine, founder of HubCollector"
-            className="w-14 h-14 rounded-full object-cover object-top flex-shrink-0 border border-stone-200"
-          />
+          {photoError ? (
+            <span className="w-14 h-14 rounded-full bg-teal-100 border border-teal-200 flex-shrink-0 flex items-center justify-center text-teal-700 text-lg font-semibold">
+              C
+            </span>
+          ) : (
+            <img
+              src="/christine.jpg"
+              alt="Christine, founder of HubCollector"
+              className="w-14 h-14 rounded-full object-cover object-top flex-shrink-0 border border-stone-200"
+              onError={() => setPhotoError(true)}
+            />
+          )}
           <div>
             <h3 className="text-base font-semibold text-stone-800 leading-snug">{state.title}</h3>
             <p className="text-sm text-stone-500 mt-1 leading-relaxed">{state.body}</p>
