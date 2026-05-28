@@ -6,8 +6,8 @@ export default function ContentLicensingPage() {
     <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
       <header className="bg-white border-b border-stone-200 px-4 py-4 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <Link href="/help" className="text-sm text-stone-400 hover:text-stone-700 transition-colors">
-            ← Help
+          <Link href="/dashboard" className="text-sm text-stone-400 hover:text-stone-700 transition-colors">
+            ← Dashboard
           </Link>
           <h1 className="text-base font-semibold text-stone-900">Content Ownership &amp; Licensing FAQ</h1>
         </div>
