@@ -143,7 +143,7 @@ export default function DashboardPage() {
       if (!user) { router.replace('/login'); return }
 
       const [{ data: hubsData }, { data: foldersData }, { data: profile }] = await Promise.all([
-        supabase.from('hubs').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }),
+        supabase.from('hubs').select('*').eq('user_id', user.id).order('title', { ascending: true }),
         supabase.from('collections').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('profiles').select('username, username_confirmed').eq('id', user.id).single(),
       ])
@@ -281,49 +281,6 @@ export default function DashboardPage() {
             onCreateCollection={() => setShowCreateFolder(true)}
           />
         )}
-
-        {/* Search & filter */}
-        <div className="mb-5 space-y-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search Hubs by title, slug, or tag…"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {tagFilter && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Filtering by tag:</span>
-              <span className="flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                #{tagFilter}
-                <button type="button" onClick={() => setTagFilter('')} className="hover:text-blue-900 leading-none">×</button>
-              </span>
-            </div>
-          )}
-          <div className="flex gap-2">
-            <select
-              value={modeFilter}
-              onChange={e => setModeFilter(e.target.value as any)}
-              title="Filter by mode"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
-            >
-              <option value="all">All modes</option>
-              <option value="landing">Interactive Pages</option>
-              <option value="redirect">Redirect Links</option>
-            </select>
-            <select
-              value={privacyFilter}
-              onChange={e => setPrivacyFilter(e.target.value as any)}
-              title="Filter by visibility"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
-            >
-              <option value="all">All visibility</option>
-              <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
-              <option value="private">Private</option>
-            </select>
-          </div>
-        </div>
 
         {/* Collections */}
         {!loading && (
@@ -494,6 +451,51 @@ export default function DashboardPage() {
                   + New Collection
                 </button>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Search & filter */}
+        {!loading && allHubs.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search Hubs by title, slug, or tag…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {tagFilter && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Filtering by tag:</span>
+                <span className="flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
+                  #{tagFilter}
+                  <button type="button" onClick={() => setTagFilter('')} className="hover:text-blue-900 leading-none">×</button>
+                </span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <select
+                value={modeFilter}
+                onChange={e => setModeFilter(e.target.value as any)}
+                title="Filter by mode"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+              >
+                <option value="all">All modes</option>
+                <option value="landing">Interactive Pages</option>
+                <option value="redirect">Redirect Links</option>
+              </select>
+              <select
+                value={privacyFilter}
+                onChange={e => setPrivacyFilter(e.target.value as any)}
+                title="Filter by visibility"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600"
+              >
+                <option value="all">All visibility</option>
+                <option value="public">Public</option>
+                <option value="unlisted">Unlisted</option>
+                <option value="private">Private</option>
+              </select>
             </div>
           </div>
         )}
