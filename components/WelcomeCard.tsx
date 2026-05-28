@@ -242,7 +242,7 @@ export default function WelcomeCard({
 
       {/* Buttons */}
       {(card.primaryButton || card.secondaryButton) && (
-        <div className="flex gap-2 flex-wrap">
+        <div className={`flex gap-2 flex-wrap${card.isFounder ? ' ml-[68px]' : ''}`}>
           {card.primaryButton && (
             card.primaryButton.href ? (
               <Link
