@@ -157,16 +157,37 @@ Creates **7 content blocks** via `Promise.all` to the API route.
 
 ### Daily Reflection / Journal (`journal`)
 Pre-fills: title "My Journal", teal theme (`#14B8A6`).  
-Creates **6 content blocks** via `Promise.all` to the API route.
+Creates **10 content blocks** via `Promise.all` to the API route. Oriented toward introspection and meaning-making, not event documentation (see Diary / Life Log for that).
 
 | # | Label | Type | Notes |
 |---|-------|------|-------|
-| 1 | Daily Reflection | text | Freeform thoughts, feelings, observations |
-| 2 | *(no label)* | image | Photo of the day |
-| 3 | Voice Journal | audio | Spoken entry — what happened, how you felt |
-| 4 | Important Moments | timeline | Significant moments as they happen |
-| 5 | Daily Intentions | checklist | 3 items: Set intention, Prioritize top 3, End-of-day reflection |
-| 6 | Additional Thoughts | text | Anything else worth capturing |
+| 1 | Today's Reflection | text | Open introspective space |
+| 2 | Mood / Energy | text | How you feel, energy level |
+| 3 | Gratitude | text | What you're grateful for |
+| 4 | What challenged me today? | text | Honest reflection on difficulty |
+| 5 | What supported me today? | text | What helped, who showed up |
+| 6 | What did I learn about myself? | text | Insight, pattern, or realization |
+| 7 | What am I releasing? | text | What you're letting go of |
+| 8 | Tomorrow's Intention | text | A single intention or focus for tomorrow |
+| 9 | Voice Reflection | audio | Spoken reflection — starts closed (`voice`) |
+| 10 | *(no label)* | image | Symbol or photo of the day (caption: "Symbol or photo of the day") |
+
+### Diary / Life Log (`diary`)
+Pre-fills: title "My Diary", amber theme (`#F59E0B`).  
+Creates **10 content blocks** via `Promise.all` to the API route. Focused on *what happened* — casual, chronological, personal record. Distinct from Daily Reflection / Journal, which asks *what did it mean*.
+
+| # | Label | Type | Notes |
+|---|-------|------|-------|
+| 1 | Today's Date | text | Date, day of week, or season |
+| 2 | What Happened Today | text | The story of the day |
+| 3 | Timeline of My Day | timeline | Pre-seeded with Morning / Afternoon / Evening events as starters |
+| 4 | People & Places | text | Who you saw, where you went |
+| 5 | *(no label)* | image | Photos from today (caption: "Photos from today") — starts closed (`photo`) |
+| 6 | Voice Note | audio | Capture a thought or memory in your own voice — starts closed (`voice`) |
+| 7 | Random Thoughts | text | Little things, funny moments, ideas |
+| 8 | Links / Keepsakes | link | Playlist, article, recipe, or anything connected to today |
+| 9 | Mood / Energy | text | How today felt |
+| 10 | One Thing I Want to Remember | text | The moment, feeling, or detail worth saving — starts closed (`memor`) |
 
 ### Goal / Habit Tracker (`goal`)
 Pre-fills: title "My Goal", rose theme (`#F43F5E`).  
@@ -263,6 +284,25 @@ Creates **14 content blocks** via `Promise.all` to the API route (RLS requires s
 | 12 | Ritual Notes | text | Guided prompts: energy, shifts, signs, emotions, lessons, next time |
 | 13 | Photos | image | Altar or ritual photos |
 | 14 | Follow-Up | checklist | 7 actions: journal, offerings, cleanup, photos, tarot record, watch for signs, revisit |
+
+### Shadow Work Journal (`shadow_work`)
+Pre-fills: title "Shadow Work", description "Shadow work is the practice of gently exploring the hidden, rejected, wounded, or unconscious parts of ourselves with honesty and compassion.", violet theme (`#8B5CF6`).  
+Creates **12 content blocks** via `Promise.all` to the API route.
+
+| # | Label | Type | Notes |
+|---|-------|------|-------|
+| 1 | Prompt or Theme | text | What you're exploring today |
+| 2 | Current Emotional State | text | Emotions present right now |
+| 3 | Trigger or Situation | text | The experience or interaction that brought this forward |
+| 4 | What Am I Avoiding? | text | Honest self-inquiry |
+| 5 | Patterns & Reactions | text | Recurring fears, behaviors, or reactions noticed |
+| 6 | Inner Dialogue | text | The voice inside — what it's saying |
+| 7 | Memory or Origin | text | When you felt this before — starts closed (`memor`) |
+| 8 | Reframing / Compassion | text | How to respond with honesty and compassion |
+| 9 | Release / Ritual / Action Step | checklist | Empty — what to release, change, or acknowledge |
+| 10 | Voice Reflection | audio | Spoken reflection — starts closed (`voice`) |
+| 11 | *(no label)* | image | Symbol, card, or mood image (caption: "Symbol, card, or image") |
+| 12 | Closing Insight | text | The truth you're leaving with today |
 
 ### Travel Journal (`travel`)
 Pre-fills: title "My Trip", blue theme (`#3B82F6`).  

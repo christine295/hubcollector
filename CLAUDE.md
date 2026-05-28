@@ -170,7 +170,7 @@ Any `text` block whose label contains `invocation`, `words to speak`, `quote`, `
 
 Defined in `TEMPLATES` array in `components/HubForm.tsx`. Template picker shown before create form. All blocks are created via `BLOCKS_BY_TEMPLATE` record in `handleSubmit` — no per-template branching needed.
 
-**18 templates (alphabetical, Blank first):** Blank, Artwork Archive (8 blocks), Book / Reading Notes (7 blocks), Daily Reflection / Journal (6 blocks), Garden Planner (9 blocks), Goal / Habit Tracker (6 blocks), Grocery List (10 blocks), Home Maintenance Log (8 blocks), Hub Collector (2 blocks), Pet Profile (8 blocks), Plant Profile (8 blocks), Recipe (8 blocks), Ritual (14 blocks), Travel Journal (7 blocks), Travel Packing List (11 blocks), Vehicle Maintenance (9 blocks), What's in the Box? (8 blocks), Workout Tracker (8 blocks).
+**20 templates (alphabetical, Blank first):** Blank, Artwork Archive (8 blocks), Book / Reading Notes (7 blocks), Daily Reflection / Journal (10 blocks), Diary / Life Log (10 blocks), Garden Planner (9 blocks), Goal / Habit Tracker (6 blocks), Grocery List (10 blocks), Home Maintenance Log (8 blocks), Hub Collector (2 blocks), Pet Profile (8 blocks), Plant Profile (8 blocks), Recipe (8 blocks), Ritual (14 blocks), Shadow Work Journal (12 blocks), Travel Journal (7 blocks), Travel Packing List (11 blocks), Vehicle Maintenance (9 blocks), What's in the Box? (8 blocks), Workout Tracker (8 blocks).
 
 See `HELP.md` for the full block-by-block breakdown of each template.
 

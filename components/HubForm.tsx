@@ -61,10 +61,19 @@ const TEMPLATES: Template[] = [
     id: 'journal',
     label: 'Daily Reflection / Journal',
     emoji: '📓',
-    description: 'A daily space for reflection, voice notes, and intentions',
+    description: 'A guided daily space for introspection, gratitude, and setting intentions',
     title: 'My Journal',
     hubDescription: '',
     themeColor: '#14B8A6',
+  },
+  {
+    id: 'diary',
+    label: 'Diary / Life Log',
+    emoji: '📔',
+    description: 'A casual daily diary for documenting what happened — events, people, photos, and memories',
+    title: 'My Diary',
+    hubDescription: '',
+    themeColor: '#F59E0B',
   },
   {
     id: 'garden',
@@ -145,6 +154,15 @@ const TEMPLATES: Template[] = [
     description: 'Document and revisit sacred rituals',
     title: 'My Ritual',
     hubDescription: 'A space to capture the intention, steps, and reflections of this ritual.',
+    themeColor: '#8B5CF6',
+  },
+  {
+    id: 'shadow_work',
+    label: 'Shadow Work Journal',
+    emoji: '🌑',
+    description: 'A private space for exploring the hidden, wounded, or unconscious parts of yourself with honesty and compassion',
+    title: 'Shadow Work',
+    hubDescription: 'Shadow work is the practice of gently exploring the hidden, rejected, wounded, or unconscious parts of ourselves with honesty and compassion.',
     themeColor: '#8B5CF6',
   },
   {
@@ -298,16 +316,16 @@ const GOAL_BLOCKS = [
 ]
 
 const JOURNAL_BLOCKS = [
-  { type: 'text' as const, data: { label: 'Daily Reflection', text: '' } },
-  { type: 'image' as const, data: { url: '', caption: '' } },
-  { type: 'audio' as const, data: { label: 'Voice Journal', url: '' } },
-  { type: 'timeline' as const, data: { label: 'Important Moments', events: [] } },
-  { type: 'checklist' as const, data: { label: 'Daily Intentions', items: [
-    { id: 'jn-c1', text: 'Set my intention for today' },
-    { id: 'jn-c2', text: 'Prioritize my top 3 tasks' },
-    { id: 'jn-c3', text: 'End-of-day reflection' },
-  ] } },
-  { type: 'text' as const, data: { label: 'Additional Thoughts', text: '' } },
+  { type: 'text' as const, data: { label: "Today's Reflection", text: '' } },
+  { type: 'text' as const, data: { label: 'Mood / Energy', text: '' } },
+  { type: 'text' as const, data: { label: 'Gratitude', text: '' } },
+  { type: 'text' as const, data: { label: 'What challenged me today?', text: '' } },
+  { type: 'text' as const, data: { label: 'What supported me today?', text: '' } },
+  { type: 'text' as const, data: { label: 'What did I learn about myself?', text: '' } },
+  { type: 'text' as const, data: { label: 'What am I releasing?', text: '' } },
+  { type: 'text' as const, data: { label: "Tomorrow's Intention", text: '' } },
+  { type: 'audio' as const, data: { label: 'Voice Reflection', url: '' } },
+  { type: 'image' as const, data: { url: '', caption: 'Symbol or photo of the day' } },
 ]
 
 const ARTWORK_BLOCKS = [
@@ -689,6 +707,38 @@ const WORKOUT_BLOCKS = [
   { type: 'text' as const, data: { label: 'Post-Workout Notes', text: 'How did it feel? What should change next time?' } },
 ]
 
+const DIARY_BLOCKS = [
+  { type: 'text' as const, data: { label: "Today's Date", text: '' } },
+  { type: 'text' as const, data: { label: 'What Happened Today', text: '' } },
+  { type: 'timeline' as const, data: { label: 'Timeline of My Day', events: [
+    { id: 'dy-t1', date: '', text: 'Morning' },
+    { id: 'dy-t2', date: '', text: 'Afternoon' },
+    { id: 'dy-t3', date: '', text: 'Evening' },
+  ] } },
+  { type: 'text' as const, data: { label: 'People & Places', text: '' } },
+  { type: 'image' as const, data: { url: '', caption: 'Photos from today' } },
+  { type: 'audio' as const, data: { label: 'Voice Note', url: '' } },
+  { type: 'text' as const, data: { label: 'Random Thoughts', text: '' } },
+  { type: 'link' as const, data: { label: 'Links / Keepsakes', url: '' } },
+  { type: 'text' as const, data: { label: 'Mood / Energy', text: '' } },
+  { type: 'text' as const, data: { label: 'One Thing I Want to Remember', text: '' } },
+]
+
+const SHADOW_BLOCKS = [
+  { type: 'text' as const, data: { label: 'Prompt or Theme', text: '' } },
+  { type: 'text' as const, data: { label: 'Current Emotional State', text: '' } },
+  { type: 'text' as const, data: { label: 'Trigger or Situation', text: '' } },
+  { type: 'text' as const, data: { label: 'What Am I Avoiding?', text: '' } },
+  { type: 'text' as const, data: { label: 'Patterns & Reactions', text: '' } },
+  { type: 'text' as const, data: { label: 'Inner Dialogue', text: '' } },
+  { type: 'text' as const, data: { label: 'Memory or Origin', text: '' } },
+  { type: 'text' as const, data: { label: 'Reframing / Compassion', text: '' } },
+  { type: 'checklist' as const, data: { label: 'Release / Ritual / Action Step', items: [] } },
+  { type: 'audio' as const, data: { label: 'Voice Reflection', url: '' } },
+  { type: 'image' as const, data: { url: '', caption: 'Symbol, card, or image' } },
+  { type: 'text' as const, data: { label: 'Closing Insight', text: '' } },
+]
+
 const BLOCKS_BY_TEMPLATE: Record<string, { type: string; data: object }[]> = {
   artwork:     ARTWORK_BLOCKS,
   ritual:      RITUAL_BLOCKS,
@@ -701,6 +751,8 @@ const BLOCKS_BY_TEMPLATE: Record<string, { type: string; data: object }[]> = {
   book:        BOOK_BLOCKS,
   goal:        GOAL_BLOCKS,
   journal:     JOURNAL_BLOCKS,
+  diary:       DIARY_BLOCKS,
+  shadow_work: SHADOW_BLOCKS,
   hub_collector: HUB_COLLECTOR_BLOCKS,
   garden:        GARDEN_BLOCKS,
   grocery:     GROCERY_BLOCKS,
@@ -721,6 +773,8 @@ const TAG_PLACEHOLDERS: Record<string, string> = {
   book:        'Type a tag and press Enter — e.g. fiction, recommended, 2024',
   goal:        'Type a tag and press Enter — e.g. fitness, learning, 2024',
   journal:     'Type a tag and press Enter — e.g. daily, gratitude, 2024',
+  diary:       'Type a tag and press Enter — e.g. daily, memories, 2024',
+  shadow_work: 'Type a tag and press Enter — e.g. shadow-work, inner-work, healing',
   hub_collector: 'Type a tag and press Enter — e.g. recipes, portfolio, family',
   garden:        'Type a tag and press Enter — e.g. vegetable, herb, spring',
   grocery:     'Type a tag and press Enter — e.g. weekly, family, meal-prep',
