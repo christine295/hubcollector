@@ -55,7 +55,7 @@ function getCardState({
     return {
       label: 'Next best step',
       title: 'Print or scan your QR code',
-      body: "Your hub is live. Download the QR code and scan it with your phone — or print a card to attach to something physical.",
+      body: "Your Hub is live. Download the QR code and scan it with your phone — or print a card to attach to something physical.",
       primaryButton: firstHubId
         ? { text: 'Print QR card', href: `/dashboard/hub/${firstHubId}/print` }
         : undefined,
@@ -65,10 +65,10 @@ function getCardState({
   if (hubCount >= 2 && collectionCount <= 1) {
     return {
       label: 'Make this useful',
-      title: 'Organize your hubs with collections',
-      body: "Collections keep related hubs together — like Pets, Kitchen, or Home. Create one to stay organized as your list grows.",
+      title: 'Organize your Hubs with Collections',
+      body: "Collections keep related Hubs together — like Pets, Kitchen, or Home. Create one to stay organized as your list grows.",
       primaryButton: onCreateCollection
-        ? { text: 'Create a collection', onClick: onCreateCollection }
+        ? { text: 'Create a Collection', onClick: onCreateCollection }
         : undefined,
     }
   }
@@ -76,16 +76,16 @@ function getCardState({
   if (hubCount >= 2 && allHubsPrivate) {
     return {
       label: 'Your HubCollector tip',
-      title: "Your hubs are private — that's okay",
-      body: "Private hubs are only visible to you when signed in. When you're ready to share one, change its visibility to Unlisted or Public in the hub's Settings tab.",
+      title: "Your Hubs are private — that's okay",
+      body: "Private Hubs are only visible to you when signed in. When you're ready to share one, change its visibility to Unlisted or Public in the Hub's Settings tab.",
     }
   }
 
   if (hubCount >= 4 && !hasHubCollector) {
     return {
       label: 'Try this next',
-      title: 'Tie your hubs together with a Hub Menu',
-      body: "You have several hubs now. A Hub Menu creates a single QR code with links to all of them — great for a fridge, a door, or anywhere central.",
+      title: 'Tie your Hubs together with a Hub Menu',
+      body: "You have several Hubs now. A Hub Menu creates a single QR code with links to all of them — great for a fridge, a door, or anywhere central.",
       primaryButton: { text: 'Create a Hub Menu', href: '/dashboard/hub/new' },
     }
   }
@@ -94,7 +94,7 @@ function getCardState({
     return {
       label: 'Make this useful',
       title: 'Save HubCollector to your home screen',
-      body: "For hubs you check regularly — shopping lists, workouts, maintenance logs — tap the share icon in your browser and choose 'Add to Home Screen' for one-tap access.",
+      body: "For Hubs you check regularly — shopping lists, workouts, maintenance logs — tap the share icon in your browser and choose 'Add to Home Screen' for one-tap access.",
     }
   }
 
