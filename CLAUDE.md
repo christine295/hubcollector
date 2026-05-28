@@ -48,13 +48,15 @@ app/
   h/[username]/[slug]/page.tsx       — public hub page (server component, passes to HubView)
 
 components/
-  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); template + mode + privacy pills (quiet metadata style: text-[11px] font-normal, 50-level tint backgrounds, stone palette for private/unlisted); tags bottom-left (same quiet style, gap-0.5), updated date bottom-right
-  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; RITUAL_BLOCKS + 10 other *_BLOCKS consts; tabs on edit (Content / Settings)
+  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; tags bottom-left, updated date bottom-right; TEMPLATE_LABELS covers all 19 non-blank templates
+  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; all *_BLOCKS consts; tabs on edit (Content / Settings); Settings tab includes danger zone with DeleteHubForm at the bottom
   HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
-  ContentBlocksEditor.tsx  — block editor (add/edit/delete/reorder); green dot = has content, hollow ring = empty
+  ContentBlocksEditor.tsx  — block editor; auto-opens first block on load; sequential Save/Close flow (openNextBlock advances to next block); FormActions component renders [Save][Close] side by side; FormShell is now a plain container (no Cancel button); green dot = has content, hollow ring = empty
+  WelcomeCard.tsx          — founder onboarding card shown on dashboard; journey-based states keyed in localStorage (hc_dismissed_cards); four journey cards + FEATURE_CARDS array for new-feature announcements; see WelcomeCard section below
   ChecklistBlock.tsx       — standalone checklist component (used only in edit preview)
-  DeleteHubForm.tsx        — delete confirmation
+  DeleteHubForm.tsx        — delete confirmation; used in HubForm Settings danger zone (not in edit page header)
   QRButton.tsx             — downloads QR PNG via qrcode package
+  SiteFooter.tsx           — footer used on dashboard, help, and legal pages; nav links (Privacy · Terms · Acceptable Use · Licensing FAQ) + trademark line + copyright line
 
 app/api/hub/[hubId]/
   content_blocks/route.ts      — GET (list), POST (create) content blocks
@@ -189,21 +191,77 @@ See `HELP.md` for the full block-by-block breakdown of each template.
 
 New blocks are inserted with `sort_order: blocks.length`.
 
+## Dashboard
+
+**File:** `app/dashboard/collections/page.tsx` (client component)
+
+- Background: `bg-[#FAF9F7]` (warm cream, matches public hub view)
+- Header: HubCollector™ logo + bordered **Help** button + ⚙ **Settings gear** dropdown (contains Sign out; future settings items go here)
+- Stats line: `X Hubs · X Collections` above the `+ New Hub` CTA
+- **WelcomeCard** renders below stats (see WelcomeCard section)
+- **Collections** section: folder SVG icon + `text-sm font-semibold`; empty collections show `empty` in muted italic instead of `0 Hubs`
+- **Search & filters** (search input + All modes + All visibility dropdowns): placed **below Collections**, directly above the hub list — they filter the list they're adjacent to
+- **Hub list** sorted alphabetically A→Z by `title` (DB query uses `.order('title', { ascending: true })`)
+- **All Hubs** section header: grid SVG icon + `text-sm font-semibold`
+
+## WelcomeCard
+
+**File:** `components/WelcomeCard.tsx` — founder onboarding card on the dashboard.
+
+**localStorage key:** `hc_dismissed_cards` — JSON array of dismissed card keys. Each card has a unique key; dismissed cards never reappear unless the key changes.
+
+**Two types of cards (priority: journey first, then feature):**
+
+**Journey cards** — shown based on current `hubCount`, one at a time, until dismissed or naturally outgrown:
+| Key | Condition | Message |
+|-----|-----------|---------|
+| `journey-welcome-v1` | hubCount === 0 | "Hi, I'm Christine" — founder intro with photo |
+| `journey-first-hub-v1` | hubCount === 1 | "You've created your first Hub" — suggests printing QR |
+| `journey-growing-v1` | hubCount >= 2 | "You're building something" — suggests Collections |
+| `journey-established-v1` | hubCount >= 4 | "You've got the hang of it" — closing message |
+
+**Feature cards** — add a new entry to `FEATURE_CARDS` array in `WelcomeCard.tsx` when shipping a notable feature. Shows to all users with ≥ 1 Hub who haven't dismissed that key. Bump the key version suffix (`v2`) to re-surface an updated announcement.
+
+All cards have an × dismiss button. Founder photo: `/public/Christine.jpg` (circular avatar, `object-top` crop). Falls back to teal "C" initial if photo missing.
+
 ## HubForm edit mode
 
-Edit page uses Content / Settings tabs (`activeTab` state). Content tab renders `<ContentBlocksEditor hubId={hub.id} hubTitle={hub.title} />`. Settings tab has all hub fields including Collection, Hub type (template_id dropdown), title, slug, mode, visibility, tags, description, image, theme color.
+Edit page (`app/dashboard/hub/[id]/edit/page.tsx`) uses Content / Settings tabs. **Delete hub has been removed from the edit page header** — it lives in the Settings tab at the bottom in a "Danger zone" section (renders `<DeleteHubForm hubId={hub.id} />`).
+
+Content tab renders `<ContentBlocksEditor hubId={hub.id} hubTitle={hub.title} />`. Settings tab has all hub fields: Collection, Hub type (template_id dropdown), title, slug, mode, visibility, tags, description, image, theme color, then danger zone.
 
 The `✓ Saved` chip appears for 2.5s after a block is updated (`savedBlockId` state).
 
 ## ContentBlocksEditor
 
+**Sequential editing flow:**
+- On load, block 1 is automatically opened in edit mode (`setEditingBlockId(loaded[0].id)`)
+- `openNextBlock(id)` — finds current block's index, sets `editingBlockId` to the next block, or null if at the last block
+- **Save** → saves data via PATCH, then calls `openNextBlock`
+- **Close** → skips saving, calls `openNextBlock` (advances without saving)
+- Adding new blocks (+ Add Content Block flow) → Close just dismisses the add form; no sequential progression
+
+**FormShell** is now a plain container (title + children only). No Cancel button.
+
+**FormActions** component renders `[Save] [Close]` side by side — Save is primary blue, Close is bordered secondary. Used by all block forms except AudioForm (which has multiple inline save paths and a standalone Close button).
+
 Block rows show a **content indicator dot**: solid green (`bg-emerald-400`) if the block has content, hollow gray ring (`border border-gray-300`) if empty. Empty block rows also render on `bg-gray-50` instead of white.
 
-`blockHasContent(block)` function in `ContentBlocksEditor.tsx` determines this by checking:
+`blockHasContent(block)` determines this:
 - `text/audio/link/phone/file` → `data.url` or `data.text` is non-empty
 - `checklist` → `data.items.length > 0`
 - `timeline` → `data.events.length > 0`
 - `image` → `data.url` is non-empty
+
+## HubCard color coding
+
+Each hub card has a 3px colored left border using `hub.theme_color` via inline style (`style={{ borderLeft: '3px solid ${hub.theme_color}' }}`). This is intentional — dynamic colors cannot be expressed as static Tailwind classes.
+
+`TEMPLATE_LABELS` in `HubCard.tsx` now covers all 19 non-blank templates. If a new template is added to `HubForm.tsx`, add a matching entry to `TEMPLATE_LABELS`.
+
+## Legal pages
+
+`/privacy`, `/terms`, `/acceptable-use`, `/content-licensing` — all exist as Next.js pages with full content. Their headers link back to **`/dashboard`** (not `/help`). If adding new legal pages, follow the same pattern: `← Dashboard` link in the header, `<SiteFooter />` at the bottom.
 
 ## Help system
 
