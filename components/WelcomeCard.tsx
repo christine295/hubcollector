@@ -111,67 +111,64 @@ function getActiveCard({
 }): CardDef | null {
   const notSeen = (key: string) => !dismissed.includes(key)
 
-  // Journey cards — one per milestone, shown until dismissed or milestone passed
-  const journeyCard: CardDef | null = (() => {
-    if (hubCount === 0 && notSeen('journey-welcome-v1')) {
-      return {
-        key: 'journey-welcome-v1',
-        isFounder: true,
-        label: 'Welcome',
-        title: "Hi, I'm Christine",
-        body: "I built HubCollector to help you turn real-life things, routines, records, and memories into living digital 'Hubs' you can update anytime.",
-        primaryButton: { text: 'Create your first Hub', href: '/dashboard/hub/new' },
-        secondaryButton: { text: 'Open Help Guide', href: '/help' },
-        footerLink: { text: 'Watch the quick tour', href: '/help' },
-      }
+  // 1 → 2 → 3: early journey cards shown before feature cards
+  if (hubCount === 0 && notSeen('journey-welcome-v1')) {
+    return {
+      key: 'journey-welcome-v1',
+      isFounder: true,
+      label: 'Welcome',
+      title: "Hi, I'm Christine",
+      body: "I built HubCollector to help you turn real-life things, routines, records, and memories into living digital 'Hubs' you can update anytime.",
+      primaryButton: { text: 'Create your first Hub', href: '/dashboard/hub/new' },
+      secondaryButton: { text: 'Open Help Guide', href: '/help' },
+      footerLink: { text: 'Watch the quick tour', href: '/help' },
     }
+  }
 
-    if (hubCount === 1 && notSeen('journey-first-hub-v1')) {
-      return {
-        key: 'journey-first-hub-v1',
-        isFounder: true,
-        label: 'Next step',
-        title: "You've created your first Hub",
-        body: "The magic really happens when you print the QR code and attach it to something real. Try scanning it with your phone camera first — it's a good moment.",
-        primaryButton: firstHubId
-          ? { text: 'Print QR card', href: `/dashboard/hub/${firstHubId}/print` }
-          : undefined,
-      }
+  if (hubCount === 1 && notSeen('journey-first-hub-v1')) {
+    return {
+      key: 'journey-first-hub-v1',
+      isFounder: true,
+      label: 'Next step',
+      title: "You've created your first Hub",
+      body: "The magic really happens when you print the QR code and attach it to something real. Try scanning it with your phone camera first — it's a good moment.",
+      primaryButton: firstHubId
+        ? { text: 'Print QR card', href: `/dashboard/hub/${firstHubId}/print` }
+        : undefined,
     }
+  }
 
-    if (hubCount >= 2 && notSeen('journey-growing-v1')) {
-      return {
-        key: 'journey-growing-v1',
-        isFounder: true,
-        label: 'Getting organized',
-        title: "You're building something",
-        body: "As your Hubs grow, Collections are how this becomes a real system for your life. Group related Hubs together — like Pets, Kitchen, or Home.",
-        primaryButton: onCreateCollection
-          ? { text: 'Create a Collection', onClick: onCreateCollection }
-          : undefined,
-      }
+  if (hubCount >= 2 && notSeen('journey-growing-v1')) {
+    return {
+      key: 'journey-growing-v1',
+      isFounder: true,
+      label: 'Getting organized',
+      title: "You're building something",
+      body: "As your Hubs grow, Collections are how this becomes a real system for your life. Group related Hubs together — like Pets, Kitchen, or Home.",
+      primaryButton: onCreateCollection
+        ? { text: 'Create a Collection', onClick: onCreateCollection }
+        : undefined,
     }
+  }
 
-    if (hubCount >= 4 && notSeen('journey-established-v1')) {
-      return {
-        key: 'journey-established-v1',
-        isFounder: true,
-        label: "You've got it",
-        title: "You've got the hang of it",
-        body: "From here, HubCollector grows with you. I'll keep sharing tips and new features as we go — reach out anytime. I'm still building this alongside you.",
-      }
+  // 5 → 6 → 7 → 8: feature cards shown after the first three journey cards
+  if (hubCount >= 1) {
+    const featureCard = FEATURE_CARDS.find(f => notSeen(f.key))
+    if (featureCard) return featureCard
+  }
+
+  // 4 (last): closing card — shown only after all feature cards are dismissed
+  if (hubCount >= 4 && notSeen('journey-established-v1')) {
+    return {
+      key: 'journey-established-v1',
+      isFounder: true,
+      label: "You've got it",
+      title: "You've got the hang of it",
+      body: "From here, HubCollector grows with you. I'll keep sharing tips and new features as we go — reach out anytime. I'm still building this alongside you.",
     }
+  }
 
-    return null
-  })()
-
-  // Feature cards — show to users with ≥ 1 Hub, after journey card is resolved
-  const featureCard = hubCount >= 1
-    ? (FEATURE_CARDS.find(f => notSeen(f.key)) ?? null)
-    : null
-
-  // Journey card takes priority; feature card fills in when no journey card applies
-  return journeyCard ?? featureCard
+  return null
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
