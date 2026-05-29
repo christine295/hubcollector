@@ -15,6 +15,73 @@ Each hub has a permanent URL at `/h/[username]/[slug]`. You print a QR code poin
 
 ---
 
+## Engagement metrics
+
+Every public hub tracks four engagement metrics, all visible on the public hub page, profile pages, and the Explore leaderboard:
+
+| Metric | What it measures |
+|--------|-----------------|
+| **Views** | Non-owner page loads (every QR scan or link visit counts) |
+| **Hearts** | Logged-in non-owners who tapped the heart in the visitor bar |
+| **Saves** | Logged-in non-owners who saved the hub to their dashboard |
+| **Shares** | Clicks on the Share button (native share sheet on mobile, clipboard copy on desktop) |
+
+Owners see their hub's heart and save counts on each hub card in the dashboard. Views and shares appear on the profile page and Explore leaderboard.
+
+---
+
+## Profiles
+
+Every user has a public profile page at `/h/[username]` showing their public hubs and earned badges.
+
+**Editing your profile:** Open the dashboard ⚙ Settings gear → **Edit Profile**, or click **Edit Profile** when viewing your own profile page. You can set:
+- **Display name** — shown above your `@username` on your profile
+- **Bio** — one or two lines about you or your hubs (160 characters)
+- **Profile photo** — upload from your device
+- **Social links** — up to 5 links with custom labels (Website, Instagram, etc.)
+
+Your `@username` is permanent — it is encoded in every QR code you've ever printed and cannot be changed.
+
+---
+
+## Badges
+
+Badges are earned automatically based on your activity and displayed publicly on your profile page. Hover a badge to see its criteria.
+
+| Badge | Criteria |
+|-------|----------|
+| 🏷️ **1st Hub** | Created your first hub |
+| 📚 **Archivist** | 5 hubs created |
+| 📜 **Chronicler** | 10 hubs created |
+| 🎙️ **Voice** | Added audio to a hub |
+| ✍️ **Storyteller** | Used 5+ block types |
+| 🗂️ **Curator** | Saved 5+ hubs from others |
+| ❤️ **Hearted** | 10 hearts received |
+| 💝 **Beloved** | 50 hearts received |
+| 💎 **Treasured** | 10 saves received |
+| 🌍 **In the Wild** | 500 views |
+| 🔁 **Circulating** | 5,000 views |
+| 💬 **Word of Mouth** | Shared a hub |
+| 👋 **Introduced** | Bio + avatar + social link added |
+| ⭐ **HubCollector** | 10+ hubs · 10+ saved from others · 50+ hearts · 50+ saves received |
+
+`HubCollector` is the top achievement — it requires being both an active creator and an engaged community member.
+
+---
+
+## Explore & Leaderboard
+
+`/explore` — Browse all public hubs across the community.
+
+- **Top Hubs leaderboard** — shown at the top when any hub has engagement data; 4 panels (Most Viewed, Most Hearted, Most Saved, Most Shared), each listing the top 5 hubs with their counts
+- **Template filter** — click a category pill to filter the hub grid by template type
+- **Hub grid** — most recently updated public hubs, sorted by `updated_at`
+- **@username links** — each hub card links to its creator's profile page
+
+The leaderboard populates automatically once the engagement metrics SQL migrations have been run.
+
+---
+
 ## Block types
 
 | Type | What it does |

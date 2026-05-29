@@ -2,6 +2,11 @@ export type Profile = {
   id: string
   email: string
   username: string | null
+  display_name: string | null
+  bio: string | null
+  avatar_url: string | null
+  social_links: { label: string; url: string }[]
+  saved_count?: number
   created_at: string
 }
 
@@ -22,6 +27,9 @@ export type Hub = {
   created_at: string
   updated_at: string
   save_count?: number
+  heart_count?: number
+  view_count?: number
+  share_count?: number
 }
 export type Collection = {
   id: string

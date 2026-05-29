@@ -303,6 +303,13 @@ export default function DashboardPage() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => { setSettingsOpen(false); router.push('/settings/profile') }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    type="button"
                     onClick={async () => {
                       setSettingsOpen(false)
                       const supabase = createClient()

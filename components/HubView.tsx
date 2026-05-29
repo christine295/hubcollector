@@ -282,6 +282,8 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
 
   async function handleShare() {
     const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/h/${username}/${hub.slug}`
+    // Fire-and-forget share count increment
+    fetch(`/api/hub/${hub.id}/share`, { method: 'POST' }).catch(() => {})
     if (typeof navigator !== 'undefined' && navigator.share) {
       try { await navigator.share({ title: hub.title, url }) } catch {}
     } else {

@@ -67,6 +67,13 @@ export default async function PublicHubPage({
     redirect(hub.redirect_url)
   }
 
+  // Track view count for non-owner visits (best-effort, uses SECURITY DEFINER RPC to bypass RLS)
+  if (!isOwner) {
+    try {
+      await supabase.rpc('increment_view_count', { p_hub_id: hub.id })
+    } catch {}
+  }
+
   const { data: contentBlocks } = await supabase
     .from('content_blocks')
     .select('*')

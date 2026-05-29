@@ -46,7 +46,10 @@ app/
   dashboard/hub/new/page.tsx         — create hub; reads ?template= and ?collection= search params and passes both to HubForm
   dashboard/hub/[id]/edit/page.tsx   — edit hub (Content tab + Settings tab)
   dashboard/hub/[id]/print/page.tsx  — print QR card
-  h/[username]/[slug]/page.tsx       — public hub page (server component, passes to HubView)
+  h/[username]/[slug]/page.tsx       — public hub page; increments view_count via increment_view_count RPC for non-owner visits; passes save/heart state + autoSave to HubView
+  h/[username]/page.tsx             — profile page; avatar, display_name, bio, social_links, badges, public hubs grid; Edit Profile for owner
+  explore/page.tsx                  — explore; Top Hubs leaderboard (Most Viewed/Hearted/Saved/Shared); template filter; hub grid
+  settings/profile/page.tsx         — profile editing (client component); display_name, bio, avatar upload, social links; PATCH /api/profile
 
 components/
   HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; tags bottom-left, updated date bottom-right; TEMPLATE_LABELS covers all 19 non-blank templates; redirect hubs show redirect_url in amber below the title
@@ -55,7 +58,7 @@ components/
   HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
   ContentBlocksEditor.tsx  — block editor; auto-opens first block on load; sequential Save/Close flow (openNextBlock advances to next block); FormActions component renders [Save][Close] side by side; FormShell is now a plain container (no Cancel button); green dot = has content, hollow ring = empty; drag-and-drop block reordering via dnd-kit (6-dot grip handle); ▲▼ arrow buttons kept as accessibility fallback
   WelcomeCard.tsx          — founder onboarding card shown on dashboard; journey-based states keyed in localStorage (hc_dismissed_cards); four journey cards + FEATURE_CARDS array for new-feature announcements; see WelcomeCard section below
-  SavedHubCard.tsx         — dashboard card for saved (non-owned) hubs; shows title, owner @username, template badge, Updated badge (hub.updated_at > saved_hub.last_viewed_at), collection badge; links to public view; ⋮ kebab (View Hub / Remove from Saved / Move to Collection)
+  SavedHubCard.tsx         — dashboard card for saved (non-owned) hubs; shows title, owner @username, template badge, Updated badge (hub.updated_at > saved_hub.last_viewed_at), collection badge; links to public view; ⋮ kebab (View Hub / Remove from Saved / Move to Collection); shows title, owner @username, template badge, Updated badge (hub.updated_at > saved_hub.last_viewed_at), collection badge; links to public view; ⋮ kebab (View Hub / Remove from Saved / Move to Collection)
   ChecklistBlock.tsx       — standalone checklist component (used only in edit preview)
   DeleteHubForm.tsx        — delete confirmation; used in HubForm Settings danger zone (not in edit page header)
   QRButton.tsx             — downloads QR PNG via qrcode package
@@ -66,14 +69,18 @@ app/api/hub/[hubId]/
   content_blocks/[id]/route.ts — PATCH (update data or sort_order), DELETE
   save/route.ts                — POST (save hub), DELETE (unsave), PATCH (update collection_id on saved_hubs row)
   heart/route.ts               — POST (heart hub), DELETE (unheart)
+  share/route.ts               — POST (increment share_count via increment_share_count RPC; no auth required)
+
+app/api/profile/route.ts       — PATCH (update display_name, bio, avatar_url, social_links for current user)
 
 lib/
-  types.ts                    — Hub, ContentBlock, Profile types
+  types.ts                    — Hub, ContentBlock, Profile, SavedHub types; Hub includes view_count, share_count, heart_count, save_count; Profile includes display_name, bio, avatar_url, social_links, saved_count
   version.ts                  — VERSION constant (e.g. 'v0.1'); displayed in dashboard header
   supabase/client.ts          — browser Supabase client
   supabase/server.ts          — server Supabase client
   supabase/uploadPhoto.ts     — upload image to hub-photos Storage bucket
   supabase/uploadAudio.ts     — upload audio to hub-audio Storage bucket
+  supabase/uploadAvatar.ts    — upload avatar to hub-photos bucket under avatars/${userId}/ prefix
 
 proxy.ts            — Next.js 16 proxy (replaces middleware.ts); protects /dashboard routes; preserves full path+search as ?next= when redirecting unauthenticated users to /login
 supabase/schema.sql — full DB schema + RLS policies
@@ -375,6 +382,64 @@ CREATE TRIGGER hubs_set_updated_at BEFORE UPDATE ON public.hubs FOR EACH ROW EXE
 -- Touch hubs.updated_at when content_blocks change (powers Updated badge)
 CREATE OR REPLACE FUNCTION public.update_hub_on_block_change() RETURNS TRIGGER AS $$ BEGIN UPDATE public.hubs SET updated_at = NOW() WHERE id = COALESCE(NEW.hub_id, OLD.hub_id); RETURN COALESCE(NEW, OLD); END; $$ LANGUAGE plpgsql;
 CREATE TRIGGER content_blocks_touch_hub AFTER INSERT OR UPDATE OR DELETE ON public.content_blocks FOR EACH ROW EXECUTE FUNCTION public.update_hub_on_block_change();
+```
+
+**Engagement metrics + profile fields + save_count (run after social features):**
+
+```sql
+-- Hub metric columns
+ALTER TABLE public.hubs ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0;
+ALTER TABLE public.hubs ADD COLUMN IF NOT EXISTS share_count integer NOT NULL DEFAULT 0;
+ALTER TABLE public.hubs ADD COLUMN IF NOT EXISTS heart_count integer NOT NULL DEFAULT 0;
+ALTER TABLE public.hubs ADD COLUMN IF NOT EXISTS save_count integer NOT NULL DEFAULT 0;
+
+-- Backfills
+UPDATE public.hubs SET heart_count = (SELECT COUNT(*) FROM public.hub_hearts WHERE hub_id = hubs.id);
+UPDATE public.hubs SET save_count  = (SELECT COUNT(*) FROM public.saved_hubs  WHERE hub_id = hubs.id);
+
+-- Heart count trigger
+CREATE OR REPLACE FUNCTION public.update_hub_heart_count() RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN UPDATE public.hubs SET heart_count = heart_count + 1 WHERE id = NEW.hub_id;
+  ELSIF TG_OP = 'DELETE' THEN UPDATE public.hubs SET heart_count = GREATEST(heart_count - 1, 0) WHERE id = OLD.hub_id;
+  END IF; RETURN COALESCE(NEW, OLD);
+END; $$ LANGUAGE plpgsql;
+CREATE TRIGGER hub_hearts_update_heart_count
+  AFTER INSERT OR DELETE ON public.hub_hearts FOR EACH ROW EXECUTE FUNCTION public.update_hub_heart_count();
+
+-- Save count trigger
+CREATE OR REPLACE FUNCTION public.update_hub_save_count() RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN UPDATE public.hubs SET save_count = save_count + 1 WHERE id = NEW.hub_id;
+  ELSIF TG_OP = 'DELETE' THEN UPDATE public.hubs SET save_count = GREATEST(save_count - 1, 0) WHERE id = OLD.hub_id;
+  END IF; RETURN COALESCE(NEW, OLD);
+END; $$ LANGUAGE plpgsql;
+CREATE TRIGGER saved_hubs_update_save_count
+  AFTER INSERT OR DELETE ON public.saved_hubs FOR EACH ROW EXECUTE FUNCTION public.update_hub_save_count();
+
+-- SECURITY DEFINER functions for atomic RPC increments (bypass RLS)
+CREATE OR REPLACE FUNCTION public.increment_view_count(p_hub_id uuid)
+  RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ UPDATE public.hubs SET view_count = view_count + 1 WHERE id = p_hub_id; $$;
+CREATE OR REPLACE FUNCTION public.increment_share_count(p_hub_id uuid)
+  RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ UPDATE public.hubs SET share_count = share_count + 1 WHERE id = p_hub_id; $$;
+
+-- Profile fields
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url text;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS social_links jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS saved_count integer NOT NULL DEFAULT 0;
+
+-- Backfill + trigger for saved_count on profiles
+UPDATE public.profiles p SET saved_count = (SELECT COUNT(*) FROM public.saved_hubs WHERE user_id = p.id);
+CREATE OR REPLACE FUNCTION public.update_profile_saved_count() RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN UPDATE public.profiles SET saved_count = saved_count + 1 WHERE id = NEW.user_id;
+  ELSIF TG_OP = 'DELETE' THEN UPDATE public.profiles SET saved_count = GREATEST(saved_count - 1, 0) WHERE id = OLD.user_id;
+  END IF; RETURN COALESCE(NEW, OLD);
+END; $$ LANGUAGE plpgsql;
+CREATE TRIGGER saved_hubs_update_profile_saved_count
+  AFTER INSERT OR DELETE ON public.saved_hubs FOR EACH ROW EXECUTE FUNCTION public.update_profile_saved_count();
 ```
 
 **Still needs to be run** (username + per-user slug uniqueness):

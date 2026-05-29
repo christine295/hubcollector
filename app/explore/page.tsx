@@ -40,6 +40,11 @@ const FILTER_TEMPLATES = [
   { id: 'maintenance', emoji: '🔧', label: 'Home' },
 ]
 
+function formatCount(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
+  return String(n)
+}
+
 export default async function ExplorePage({
   searchParams,
 }: {
@@ -48,42 +53,75 @@ export default async function ExplorePage({
   const { template: templateFilter } = await searchParams
   const supabase = await createClient()
 
-  let query = supabase
-    .from('hubs')
-    .select('id, title, description, slug, theme_color, template_id, user_id, updated_at')
-    .eq('privacy_mode', 'public')
-    .eq('mode', 'landing')
-    .order('updated_at', { ascending: false })
-    .limit(48)
+  // Leaderboard queries — graceful: resolve to null if columns not yet migrated
+  const [
+    { data: topViewed },
+    { data: topHearted },
+    { data: topSaved },
+    { data: topShared },
+    hubsResult,
+    authResult,
+  ] = await Promise.all([
+    supabase.from('hubs').select('id, title, slug, theme_color, view_count, user_id')
+      .eq('privacy_mode', 'public').eq('mode', 'landing')
+      .order('view_count' as any, { ascending: false }).limit(5),
+    supabase.from('hubs').select('id, title, slug, theme_color, heart_count, user_id')
+      .eq('privacy_mode', 'public').eq('mode', 'landing')
+      .order('heart_count' as any, { ascending: false }).limit(5),
+    supabase.from('hubs').select('id, title, slug, theme_color, save_count, user_id')
+      .eq('privacy_mode', 'public').eq('mode', 'landing')
+      .order('save_count' as any, { ascending: false }).limit(5),
+    supabase.from('hubs').select('id, title, slug, theme_color, share_count, user_id')
+      .eq('privacy_mode', 'public').eq('mode', 'landing')
+      .order('share_count' as any, { ascending: false }).limit(5),
+    (async () => {
+      let q = supabase
+        .from('hubs')
+        .select('id, title, description, slug, theme_color, template_id, user_id, updated_at')
+        .eq('privacy_mode', 'public')
+        .eq('mode', 'landing')
+        .order('updated_at', { ascending: false })
+        .limit(48)
+      if (templateFilter && TEMPLATE_LABELS[templateFilter]) q = q.eq('template_id', templateFilter)
+      return q
+    })(),
+    supabase.auth.getUser(),
+  ] as const)
 
-  if (templateFilter && TEMPLATE_LABELS[templateFilter]) {
-    query = query.eq('template_id', templateFilter)
-  }
+  const hubs = (hubsResult as any).data as any[] | null
+  const user = (authResult as any).data?.user ?? null
 
-  const { data: hubs } = await query
+  // Filter leaderboard results to non-zero counts only
+  const leaderViewed = (topViewed ?? []).filter((h: any) => (h.view_count ?? 0) > 0)
+  const leaderHearted = (topHearted ?? []).filter((h: any) => (h.heart_count ?? 0) > 0)
+  const leaderSaved = (topSaved ?? []).filter((h: any) => (h.save_count ?? 0) > 0)
+  const leaderShared = (topShared ?? []).filter((h: any) => (h.share_count ?? 0) > 0)
+  const showLeaderboard = leaderViewed.length > 0 || leaderHearted.length > 0 || leaderSaved.length > 0 || leaderShared.length > 0
 
-  // Fetch owner usernames
-  const ownerIds = [...new Set((hubs ?? []).map(h => h.user_id))]
-  const { data: profiles } = ownerIds.length > 0
-    ? await supabase.from('profiles').select('id, username').in('id', ownerIds)
+  // Collect all user_ids (leaderboard + grid) for one profile fetch
+  const allLeaderHubs = [...leaderViewed, ...leaderHearted, ...leaderSaved, ...leaderShared]
+  const allUserIds = [...new Set([
+    ...(hubs ?? []).map((h: any) => h.user_id),
+    ...allLeaderHubs.map((h: any) => h.user_id),
+  ])]
+  const { data: profiles } = allUserIds.length > 0
+    ? await supabase.from('profiles').select('id, username').in('id', allUserIds)
     : { data: [] }
   const usernameMap: Record<string, string> = {}
   ;(profiles ?? []).forEach((p: any) => { usernameMap[p.id] = p.username })
 
-  // Fetch heart counts
-  const hubIds = (hubs ?? []).map(h => h.id)
+  // Fetch heart counts for grid hubs
+  const hubIds = (hubs ?? []).map((h: any) => h.id)
   const { data: heartRows } = hubIds.length > 0
     ? await supabase.from('hub_hearts').select('hub_id').in('hub_id', hubIds)
     : { data: [] }
   const heartCounts: Record<string, number> = {}
   ;(heartRows ?? []).forEach((h: any) => { heartCounts[h.hub_id] = (heartCounts[h.hub_id] ?? 0) + 1 })
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const enrichedHubs: any[] = (hubs ?? []).map(h => ({
+  const enrichedHubs: any[] = (hubs ?? []).map((h: any) => ({
     ...h,
     owner_username: usernameMap[h.user_id] ?? '',
-    hearts: heartCounts[h.id] ?? 0,
+    hearts: (h.heart_count ?? heartCounts[h.id]) ?? 0,
   }))
 
   const activeTemplate = templateFilter && TEMPLATE_LABELS[templateFilter]
@@ -123,6 +161,49 @@ export default async function ExplorePage({
             )}
           </p>
         </div>
+
+        {/* Leaderboard */}
+        {showLeaderboard && (
+          <section className="mb-8">
+            <h2 className="text-sm font-semibold text-stone-700 mb-3">Top Hubs</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { label: 'Most Viewed',  icon: '👁',  data: leaderViewed,  metricKey: 'view_count'  },
+                { label: 'Most Hearted', icon: '♥',   data: leaderHearted, metricKey: 'heart_count' },
+                { label: 'Most Saved',   icon: '🔖',  data: leaderSaved,   metricKey: 'save_count'  },
+                { label: 'Most Shared',  icon: '↗',   data: leaderShared,  metricKey: 'share_count' },
+              ].filter(col => col.data.length > 0).map(col => (
+                <div key={col.label} className="bg-white rounded-xl border border-stone-100 p-4">
+                  <h3 className="text-xs font-semibold text-stone-500 mb-3 flex items-center gap-1.5">
+                    <span>{col.icon}</span>{col.label}
+                  </h3>
+                  <ol className="space-y-2.5">
+                    {col.data.map((hub: any, i: number) => (
+                      <li key={hub.id}>
+                        <a
+                          href={`/h/${usernameMap[hub.user_id] ?? ''}/${hub.slug}`}
+                          className="flex items-center gap-2 group"
+                        >
+                          <span className="text-[10px] text-stone-300 w-3 shrink-0 font-mono">{i + 1}</span>
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: hub.theme_color ?? '#E5E7EB' }}
+                          />
+                          <span className="flex-1 text-xs text-stone-700 truncate group-hover:text-stone-900 transition-colors leading-tight">
+                            {hub.title}
+                          </span>
+                          <span className="text-[10px] text-stone-400 shrink-0 font-medium tabular-nums">
+                            {formatCount(hub[col.metricKey] ?? 0)}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Template filter pills */}
         <div className="flex flex-wrap gap-1.5 mb-8">
