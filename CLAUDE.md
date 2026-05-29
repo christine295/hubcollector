@@ -10,6 +10,7 @@ Targeting household, creative, ritual, and eventually business use cases (proper
 - **Supabase** — auth (email + Google OAuth) + database + Storage (images, audio)
 - **Tailwind CSS**
 - **`qrcode` npm package** — QR PNG generation in browser
+- **`@dnd-kit/core` + `@dnd-kit/sortable` + `@dnd-kit/utilities`** — drag-and-drop for block reordering in ContentBlocksEditor
 
 ## Running locally
 
@@ -36,22 +37,23 @@ Supabase project ref: `hiotzlktznkznjxjakup`
 ```
 app/
   page.tsx                           — redirects to /dashboard or /login
-  login/page.tsx                     — Google OAuth only; both email login and email signup grayed out pending SMTP
+  login/page.tsx                     — Google OAuth only; both email login and email signup grayed out pending SMTP; threads ?next= param through OAuth redirectTo so post-login destination is preserved
   signup/page.tsx                    — Google OAuth only; email form grayed out pending SMTP setup
   setup/page.tsx                     — username picker; shown once after first login (when username_confirmed=false); redirects to /dashboard on confirm
-  auth/callback/route.ts             — OAuth callback handler
-  help/page.tsx                      — in-app onboarding & inspiration page (no auth required); server component; sections: intro, popular uses, template cards grid, how hubs work, collections, block types, advanced styling, tips
+  auth/callback/route.ts             — OAuth callback handler; reads ?next= param and redirects there after auth
+  help/page.tsx                      — in-app onboarding & inspiration page (no auth required); async server component; checks auth to set CTA link target (logged-in → /dashboard/hub/new?template=id, logged-out → /login?next=...); uses HelpTemplateGrid client component for template section; sections: intro, popular uses, template cards + lightbox modal, how hubs work, collections, block types, advanced styling, tips
   dashboard/collections/page.tsx     — main dashboard; collection cards (expandable, click to select/filter hub list); hub list below; auto-creates "My Hubs" collection on first load
-  dashboard/hub/new/page.tsx         — create hub (template picker → form → ContentBlocksEditor)
+  dashboard/hub/new/page.tsx         — create hub; reads ?template= and ?collection= search params and passes both to HubForm
   dashboard/hub/[id]/edit/page.tsx   — edit hub (Content tab + Settings tab)
   dashboard/hub/[id]/print/page.tsx  — print QR card
   h/[username]/[slug]/page.tsx       — public hub page (server component, passes to HubView)
 
 components/
-  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; tags bottom-left, updated date bottom-right; TEMPLATE_LABELS covers all 19 non-blank templates
-  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; all *_BLOCKS consts; tabs on edit (Content / Settings); Settings tab includes danger zone with DeleteHubForm at the bottom
+  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; tags bottom-left, updated date bottom-right; TEMPLATE_LABELS covers all 19 non-blank templates; redirect hubs show redirect_url in amber below the title
+  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; all *_BLOCKS consts; tabs on edit (Content / Settings); Settings tab includes danger zone with DeleteHubForm at the bottom; accepts initialTemplateId prop (skips template picker, pre-applies template); mode selector has inline explanation text and destination URL field appears immediately below the buttons when Redirect Link is selected
+  HelpTemplateGrid.tsx     — client component for the help page template section; renders 2-col card grid with "Create this Hub »" CTA and "See blocks" button; "See blocks" opens a lightbox modal with block-by-block detail table and prominent Create CTA; accepts templates and isLoggedIn props
   HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
-  ContentBlocksEditor.tsx  — block editor; auto-opens first block on load; sequential Save/Close flow (openNextBlock advances to next block); FormActions component renders [Save][Close] side by side; FormShell is now a plain container (no Cancel button); green dot = has content, hollow ring = empty
+  ContentBlocksEditor.tsx  — block editor; auto-opens first block on load; sequential Save/Close flow (openNextBlock advances to next block); FormActions component renders [Save][Close] side by side; FormShell is now a plain container (no Cancel button); green dot = has content, hollow ring = empty; drag-and-drop block reordering via dnd-kit (6-dot grip handle); ▲▼ arrow buttons kept as accessibility fallback
   WelcomeCard.tsx          — founder onboarding card shown on dashboard; journey-based states keyed in localStorage (hc_dismissed_cards); four journey cards + FEATURE_CARDS array for new-feature announcements; see WelcomeCard section below
   ChecklistBlock.tsx       — standalone checklist component (used only in edit preview)
   DeleteHubForm.tsx        — delete confirmation; used in HubForm Settings danger zone (not in edit page header)
@@ -70,7 +72,7 @@ lib/
   supabase/uploadPhoto.ts     — upload image to hub-photos Storage bucket
   supabase/uploadAudio.ts     — upload audio to hub-audio Storage bucket
 
-proxy.ts            — Next.js 16 proxy (replaces middleware.ts); protects /dashboard routes
+proxy.ts            — Next.js 16 proxy (replaces middleware.ts); protects /dashboard routes; preserves full path+search as ?next= when redirecting unauthenticated users to /login
 supabase/schema.sql — full DB schema + RLS policies
 HELP.md             — developer reference: block shapes, design notes, template authoring guide
 ```
@@ -105,8 +107,8 @@ Block inserts/updates **must go through the API routes** (`/api/hub/[hubId]/cont
 ## Core concepts
 
 **Hub modes:**
-- `landing` — shows the public content page (HubView); labelled **"Interactive Page"** in the UI
-- `redirect` — instantly redirects to `redirect_url`; labelled **"Redirect Link"** in the UI
+- `landing` — shows the public content page (HubView); labelled **"Interactive Page"** in both create and edit UI (was "Landing Page" in create mode — corrected for consistency)
+- `redirect` — instantly redirects to `redirect_url`; labelled **"Redirect Link"** in the UI; destination URL field appears inline immediately below the mode buttons, not at the bottom of the form
 
 New hubs default to `private` visibility.
 
@@ -183,7 +185,9 @@ See `HELP.md` for the full block-by-block breakdown of each template.
 4. Add a tag placeholder to `TAG_PLACEHOLDERS` record
 5. Add audio label suggestions to `AUDIO_SUGGESTIONS` in `ContentBlocksEditor.tsx`
 6. Add checklist label placeholder to `CHECKLIST_LABEL_PLACEHOLDER` in `ContentBlocksEditor.tsx`
-7. All block inserts use `fetch('/api/hub/${newHub.id}/content_blocks', { method: 'POST' })` automatically via the map in `handleSubmit`
+7. Add an entry to the `TEMPLATES` array in `app/help/page.tsx` — include `templateId` (must match the id in HubForm), `name`, `emoji`, `tagline`, `description`, `borderClass`, and `blocks` array (for the lightbox modal)
+8. Add a matching entry to `TEMPLATE_LABELS` in `components/HubCard.tsx`
+9. All block inserts use `fetch('/api/hub/${newHub.id}/content_blocks', { method: 'POST' })` automatically via the map in `handleSubmit`
 
 ## Sort order
 
@@ -232,6 +236,10 @@ Content tab renders `<ContentBlocksEditor hubId={hub.id} hubTitle={hub.title} />
 
 The `✓ Saved` chip appears for 2.5s after a block is updated (`savedBlockId` state).
 
+**`initialTemplateId` prop:** when passed to `HubForm` (from `/dashboard/hub/new?template=id`), the template picker is skipped entirely and the matching template's title, slug, description, theme color, and template_id are pre-applied as initial state. The `preselected` variable looks up the template from the `TEMPLATES` array at component initialization.
+
+**Mode selector UX:** both create and edit modes show an explanation sentence above the buttons ("What happens when someone scans the QR code or visits this Hub's URL."). When "Redirect Link" is selected, the Destination URL input appears immediately below the mode buttons — not at the bottom of the form.
+
 ## ContentBlocksEditor
 
 **Sequential editing flow:**
@@ -253,6 +261,13 @@ Block rows show a **content indicator dot**: solid green (`bg-emerald-400`) if t
 - `timeline` → `data.events.length > 0`
 - `image` → `data.url` is non-empty
 
+**Drag-and-drop reordering:**
+- Uses `@dnd-kit/core` + `@dnd-kit/sortable`. Each non-editing block row is wrapped in `SortableBlockRow` (defined in the same file).
+- A 6-dot grip handle (`GripIcon`) is rendered at the left of each row. Drag the handle to reorder.
+- `handleDragEnd` uses `arrayMove` then normalizes `sort_order` to `0,1,2,…` and PATCHes only changed blocks.
+- `PointerSensor` has a 5px activation distance to prevent accidental drags on click.
+- ▲▼ arrow buttons are kept for keyboard/accessibility fallback — do not remove them.
+
 ## HubCard color coding
 
 Each hub card has a 3px colored left border using `hub.theme_color` via inline style (`style={{ borderLeft: '3px solid ${hub.theme_color}' }}`). This is intentional — dynamic colors cannot be expressed as static Tailwind classes.
@@ -265,15 +280,18 @@ Each hub card has a 3px colored left border using `hub.theme_color` via inline s
 
 ## Help system
 
-- `/help` — in-app onboarding & inspiration page (no auth required), linked from dashboard header; server component (no `'use client'`); template cards use static Tailwind `borderClass` strings (e.g. `border-l-blue-500`) — no inline styles
+- `/help` — in-app onboarding & inspiration page (no auth required), linked from dashboard header; **async server component** that checks auth; passes `templates` data and `isLoggedIn` to `HelpTemplateGrid`; template cards use static Tailwind `borderClass` strings (e.g. `border-l-blue-500`) — no inline styles
+- `HelpTemplateGrid.tsx` — client component; manages `openTemplate` modal state; renders 2-col grid with "Create this Hub »" + "See blocks" per card; lightbox modal shows block table + Create CTA; `isLoggedIn` determines whether CTA links to `/dashboard/hub/new?template=id` or `/login?next=...`
 - `HELP.md` — developer reference in repo root
 
 Both files must stay template-agnostic in general sections. Template-specific content belongs only inside the per-template section.
 
+**Navigation arrows:** all `«` Back / Dashboard and `»` forward CTAs use double guillemet Unicode characters (`«` U+00AB, `»` U+00BB). Do not use SVG chevrons or `←`/`→` Unicode arrows.
+
 **`/help` page structure** (in order):
 1. What is HubCollector? — intro + callout box
 2. What people use it for — flex-wrap pill grid (15 popular uses)
-3. Templates — 2-col card grid with color-accent left border + block-by-block detail tables below
+3. Templates — 2-col card grid (via HelpTemplateGrid) + lightbox modal for block details; each card has "Create this Hub »" CTA and "See blocks" button
 4. How hubs work — mode cards (2-col) + privacy cards (3-col)
 5. Collections & Organization
 6. Block types — 2-col card grid with emoji
