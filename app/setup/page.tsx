@@ -11,8 +11,8 @@ const RESERVED = new Set([
   'about', 'api', 'auth', 'dashboard', 'help', 'home', 'hub', 'hubs',
   'login', 'print', 'setup', 'signup',
   // admin / brand
-  'admin', 'administrator', 'billing', 'mod', 'moderator', 'qrmagnotes',
-  'qrmag', 'root', 'staff', 'support', 'system', 'team',
+  'admin', 'administrator', 'billing', 'mod', 'moderator', 'hubcollector',
+  'qrmagnotes', 'qrmag', 'root', 'staff', 'support', 'system', 'team',
   // generic traps
   'account', 'accounts', 'me', 'null', 'profile', 'profiles', 'settings',
   'undefined', 'user', 'users',
