@@ -38,12 +38,14 @@ export default function HubCard({
   onTagClick,
   folders,
   onFolderChange,
+  heartCount,
 }: {
   hub: Hub
   username: string
   onTagClick?: (tag: string) => void
   folders?: { id: string; title: string }[]
   onFolderChange?: (hubId: string, folderId: string | null) => void
+  heartCount?: number
 }) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -217,9 +219,19 @@ export default function HubCard({
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-gray-300 shrink-0 whitespace-nowrap">
-          {formatDate(hub.updated_at)}
-        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          {heartCount != null && heartCount > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-rose-400">
+              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+              </svg>
+              {heartCount}
+            </span>
+          )}
+          <p className="text-[10px] text-gray-300 whitespace-nowrap">
+            {formatDate(hub.updated_at)}
+          </p>
+        </div>
       </div>
     </div>
   )

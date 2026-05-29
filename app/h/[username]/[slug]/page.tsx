@@ -67,21 +67,82 @@ export default async function PublicHubPage({ params }: { params: Promise<{ user
     .eq('hub_id', hub.id)
     .order('sort_order')
 
-  // Pre-fetch hubs for any collection_menu blocks
+  // Pre-fetch hubs for any collection_menu blocks (owned + saved hubs)
   const menuBlocks = (contentBlocks ?? []).filter((b: any) => b.type === 'collection_menu')
   const collectionHubs: Record<string, any[]> = {}
 
   await Promise.all(menuBlocks.map(async (block: any) => {
     const { collection_id, excluded_hub_ids = [] } = block.data ?? {}
     if (!collection_id) return
-    const { data: hubs } = await supabase
+
+    // Owned hubs in the collection
+    const { data: ownedHubs } = await supabase
       .from('hubs')
       .select('id, title, description, theme_color, slug, privacy_mode, template_id')
       .eq('collection_id', collection_id)
       .order('updated_at', { ascending: false })
-    // RLS already filters private hubs for non-owners; also remove explicitly excluded ones
-    collectionHubs[block.id] = (hubs ?? []).filter((h: any) => !excluded_hub_ids.includes(h.id))
+
+    const filteredOwned = (ownedHubs ?? [])
+      .filter((h: any) => !excluded_hub_ids.includes(h.id))
+      .map((h: any) => ({ ...h, owner_username: username }))
+
+    // Saved hubs the page owner assigned to this collection
+    // RLS policy allows reading saved_hubs where collection_id IS NOT NULL and hub is non-private
+    const { data: savedRows } = await supabase
+      .from('saved_hubs')
+      .select('hub_id, hubs(id, title, description, theme_color, slug, privacy_mode, template_id, user_id)')
+      .eq('collection_id', collection_id)
+      .eq('user_id', profile.id)
+
+    let savedHubsForMenu: any[] = []
+    if (savedRows && savedRows.length > 0) {
+      const ownerIds = [...new Set(savedRows.map((r: any) => r.hubs?.user_id).filter(Boolean))]
+      const { data: ownerProfiles } = ownerIds.length > 0
+        ? await supabase.from('profiles').select('id, username').in('id', ownerIds)
+        : { data: [] }
+
+      const uMap: Record<string, string> = {}
+      ;(ownerProfiles ?? []).forEach((p: any) => { uMap[p.id] = p.username })
+
+      savedHubsForMenu = savedRows
+        .filter((r: any) => r.hubs && !excluded_hub_ids.includes(r.hubs.id) && r.hubs.privacy_mode !== 'private')
+        .map((r: any) => ({ ...r.hubs, owner_username: uMap[r.hubs.user_id] ?? null }))
+    }
+
+    // Merge, dedup by id (owned hubs take precedence)
+    const seen = new Set<string>(filteredOwned.map((h: any) => h.id))
+    const merged = [...filteredOwned, ...savedHubsForMenu.filter((h: any) => !seen.has(h.id))]
+    collectionHubs[block.id] = merged
   }))
+
+  // Fetch heart count (visible to everyone)
+  const { count: heartCount } = await supabase
+    .from('hub_hearts')
+    .select('*', { count: 'exact', head: true })
+    .eq('hub_id', hub.id)
+
+  // Fetch save/heart state for logged-in non-owners
+  let isSaved = false
+  let userHearted = false
+
+  if (user && !isOwner) {
+    const [{ data: savedHub }, { data: heartRow }] = await Promise.all([
+      supabase.from('saved_hubs').select('id').eq('user_id', user.id).eq('hub_id', hub.id).single(),
+      supabase.from('hub_hearts').select('id').eq('user_id', user.id).eq('hub_id', hub.id).single(),
+    ])
+    isSaved = !!savedHub
+    userHearted = !!heartRow
+
+    // Update last_viewed_at if this hub is saved (best-effort)
+    if (savedHub) {
+      try {
+        await supabase
+          .from('saved_hubs')
+          .update({ last_viewed_at: new Date().toISOString() })
+          .eq('id', savedHub.id)
+      } catch {}
+    }
+  }
 
   const color = hub.theme_color ?? '#3B82F6'
 
@@ -93,6 +154,10 @@ export default async function PublicHubPage({ params }: { params: Promise<{ user
       isOwner={isOwner}
       username={username}
       collectionHubs={collectionHubs}
+      currentUserId={user?.id ?? null}
+      isSaved={isSaved}
+      heartCount={heartCount ?? 0}
+      userHearted={userHearted}
     />
   )
 }

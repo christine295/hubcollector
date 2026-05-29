@@ -192,21 +192,55 @@ function Section({ type, label, open, onToggle, children }: {
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
-export default function HubView({ hub, blocks, color, isOwner, username, collectionHubs }: {
+export default function HubView({ hub, blocks, color, isOwner, username, collectionHubs, currentUserId, isSaved: initialIsSaved, heartCount: initialHeartCount, userHearted: initialUserHearted }: {
   hub: any
   blocks: any[]
   color: string
   isOwner: boolean
   username: string
   collectionHubs?: Record<string, any[]>
+  currentUserId?: string | null
+  isSaved?: boolean
+  heartCount?: number
+  userHearted?: boolean
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const s: Record<string, boolean> = {}
     blocks.forEach(b => { s[b.id] = defaultOpen(b.type, b.data?.label ?? '') })
     return s
   })
+  const [saved, setSaved] = useState(initialIsSaved ?? false)
+  const [hearted, setHearted] = useState(initialUserHearted ?? false)
+  const [hearts, setHearts] = useState(initialHeartCount ?? 0)
+  const [savePending, setSavePending] = useState(false)
+  const [heartPending, setHeartPending] = useState(false)
 
   const toggle = (id: string) => setOpen(p => ({ ...p, [id]: !p[id] }))
+
+  async function handleSaveClick() {
+    if (!currentUserId) {
+      window.location.href = `/login?next=/h/${username}/${hub.slug}`
+      return
+    }
+    setSavePending(true)
+    const res = await fetch(`/api/hub/${hub.id}/save`, { method: saved ? 'DELETE' : 'POST' })
+    if (res.ok) setSaved(v => !v)
+    setSavePending(false)
+  }
+
+  async function handleHeartClick() {
+    if (!currentUserId) {
+      window.location.href = `/login?next=/h/${username}/${hub.slug}`
+      return
+    }
+    setHeartPending(true)
+    const res = await fetch(`/api/hub/${hub.id}/heart`, { method: hearted ? 'DELETE' : 'POST' })
+    if (res.ok) {
+      setHearted(v => !v)
+      setHearts(n => hearted ? n - 1 : n + 1)
+    }
+    setHeartPending(false)
+  }
 
   const hasImageHero = !!hub.image_url
 
@@ -222,6 +256,41 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
           >
             Edit
           </a>
+        </div>
+      )}
+
+      {/* Visitor bar — for non-owners */}
+      {!isOwner && (
+        <div className="bg-white/90 backdrop-blur-sm border-b border-stone-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-20">
+          <button
+            type="button"
+            onClick={handleHeartClick}
+            disabled={heartPending}
+            aria-label={hearted ? 'Remove heart' : 'Heart this hub'}
+            className={`flex items-center gap-1.5 transition-colors ${
+              hearted ? 'text-rose-500' : 'text-stone-400 hover:text-rose-400'
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24"
+              fill={hearted ? 'currentColor' : 'none'}
+              stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+            </svg>
+            {hearts > 0 && <span className="text-xs font-medium">{hearts}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            disabled={savePending}
+            className={`text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
+              saved
+                ? 'text-emerald-600 border-emerald-200 bg-emerald-50 hover:bg-emerald-100'
+                : 'text-stone-600 border-stone-200 hover:bg-stone-50'
+            }`}
+          >
+            {saved ? '✓ Saved' : 'Save Hub'}
+          </button>
         </div>
       )}
 
@@ -330,7 +399,7 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
                     {menuHubs.map((h: any) => (
                       <a
                         key={h.id}
-                        href={`/h/${username}/${h.slug}`}
+                        href={`/h/${h.owner_username ?? username}/${h.slug}`}
                         className="block rounded-xl px-5 py-4 transition-all hover:opacity-90 active:scale-[0.99]"
                         style={{
                           backgroundColor: `${h.theme_color ?? color}14`,

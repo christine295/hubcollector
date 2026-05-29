@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import HubCard from '@/components/HubCard'
+import SavedHubCard from '@/components/SavedHubCard'
 import SiteFooter from '@/components/SiteFooter'
 import WelcomeCard from '@/components/WelcomeCard'
 import { VERSION } from '@/lib/version'
@@ -106,6 +107,8 @@ export default function DashboardPage() {
   const [folders, setFolders] = useState<any[]>([])
   const [username, setUsername] = useState<string>('')
   const [loading, setLoading] = useState(true)
+  const [savedHubs, setSavedHubs] = useState<any[]>([])
+  const [heartCounts, setHeartCounts] = useState<Record<string, number>>({})
   const [folderFilter, setFolderFilter] = useState<string | null>(null)
   const [openCollectionMenu, setOpenCollectionMenu] = useState<string | null>(null)
   const [showCreateFolder, setShowCreateFolder] = useState(false)
@@ -142,10 +145,14 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
 
-      const [{ data: hubsData }, { data: foldersData }, { data: profile }] = await Promise.all([
+      const [{ data: hubsData }, { data: foldersData }, { data: profile }, { data: savedData }] = await Promise.all([
         supabase.from('hubs').select('*').eq('user_id', user.id).order('title', { ascending: true }),
         supabase.from('collections').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('profiles').select('username, username_confirmed').eq('id', user.id).single(),
+        supabase.from('saved_hubs')
+          .select('id, hub_id, collection_id, last_viewed_at, created_at, hubs(id, title, slug, theme_color, template_id, updated_at, privacy_mode, user_id)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
       ])
 
       if (!(profile as any)?.username_confirmed) {
@@ -153,7 +160,8 @@ export default function DashboardPage() {
         return
       }
 
-      setAllHubs(hubsData || [])
+      const ownedHubs = hubsData || []
+      setAllHubs(ownedHubs)
       setUsername((profile as any)?.username ?? '')
 
       let currentFolders = foldersData || []
@@ -163,6 +171,30 @@ export default function DashboardPage() {
         if (newFolder) currentFolders = [newFolder]
       }
       setFolders(currentFolders)
+
+      // Process saved hubs — fetch owner usernames
+      const validSaved = (savedData ?? []).filter((s: any) => s.hubs && s.hubs.privacy_mode !== 'private')
+      const ownerIds = [...new Set(validSaved.map((s: any) => s.hubs?.user_id).filter(Boolean))] as string[]
+      const { data: ownerProfiles } = ownerIds.length > 0
+        ? await supabase.from('profiles').select('id, username').in('id', ownerIds)
+        : { data: [] }
+      const usernameMap: Record<string, string> = {}
+      ;(ownerProfiles ?? []).forEach((p: any) => { usernameMap[p.id] = p.username })
+      setSavedHubs(validSaved.map((s: any) => ({
+        ...s,
+        hub: s.hubs,
+        owner_username: usernameMap[s.hubs.user_id] ?? '',
+      })))
+
+      // Heart counts for owned hubs
+      const ownedIds = ownedHubs.map((h: any) => h.id)
+      const { data: heartRows } = ownedIds.length > 0
+        ? await supabase.from('hub_hearts').select('hub_id').in('hub_id', ownedIds)
+        : { data: [] }
+      const counts: Record<string, number> = {}
+      ;(heartRows ?? []).forEach((h: any) => { counts[h.hub_id] = (counts[h.hub_id] ?? 0) + 1 })
+      setHeartCounts(counts)
+
       setLoading(false)
     }
     fetchData()
@@ -198,6 +230,22 @@ export default function DashboardPage() {
     const supabase = createClient()
     await supabase.from('hubs').update({ collection_id: folderId }).eq('id', hubId)
     setAllHubs(prev => prev.map(h => h.id === hubId ? { ...h, collection_id: folderId } : h))
+  }
+
+  async function handleSavedHubUnsave(hubId: string) {
+    const res = await fetch(`/api/hub/${hubId}/save`, { method: 'DELETE' })
+    if (res.ok) setSavedHubs(prev => prev.filter(s => s.hub_id !== hubId))
+  }
+
+  async function handleSavedHubCollectionChange(hubId: string, collectionId: string | null) {
+    const res = await fetch(`/api/hub/${hubId}/save`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ collection_id: collectionId }),
+    })
+    if (res.ok) {
+      setSavedHubs(prev => prev.map(s => s.hub_id === hubId ? { ...s, collection_id: collectionId } : s))
+    }
   }
 
   const totalHubs = allHubs.length
@@ -544,6 +592,7 @@ export default function DashboardPage() {
                     onTagClick={setTagFilter}
                     folders={folders}
                     onFolderChange={handleFolderChange}
+                    heartCount={heartCounts[hub.id]}
                   />
                 ))
               ) : (
@@ -553,6 +602,33 @@ export default function DashboardPage() {
               )}
             </div>
           </>
+        )}
+
+        {/* Saved Hubs section */}
+        {!loading && savedHubs.length > 0 && (
+          <div className="mt-8">
+            <div className="mb-3">
+              <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
+                <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 text-gray-400 flex-shrink-0">
+                  <path d="M2 2a2 2 0 012-2h8a2 2 0 012 2v13.5a.5.5 0 01-.777.416L8 13.101l-5.223 2.815A.5.5 0 012 15.5V2zm2-1a1 1 0 00-1 1v12.566l4.723-2.482a.5.5 0 01.554 0L13 14.566V2a1 1 0 00-1-1H4z"/>
+                </svg>
+                Saved Hubs
+                <span className="text-xs font-normal text-gray-400">({savedHubs.length})</span>
+              </h2>
+              <p className="text-[11px] text-gray-400 mt-0.5 ml-5">Hubs saved from other people</p>
+            </div>
+            <div className="space-y-2">
+              {savedHubs.map(savedHub => (
+                <SavedHubCard
+                  key={savedHub.id}
+                  savedHub={savedHub}
+                  folders={folders}
+                  onUnsave={handleSavedHubUnsave}
+                  onCollectionChange={handleSavedHubCollectionChange}
+                />
+              ))}
+            </div>
+          </div>
         )}
 
       </main>

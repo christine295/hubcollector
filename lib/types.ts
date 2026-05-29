@@ -43,6 +43,15 @@ export type ContentBlock = {
   updated_at: string
 }
 
+export type SavedHub = {
+  id: string
+  user_id: string
+  hub_id: string
+  collection_id: string | null
+  last_viewed_at: string | null
+  created_at: string
+}
+
 export type HubLink = {
   id: string
   hub_id: string
