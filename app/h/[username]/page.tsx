@@ -67,7 +67,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, username, display_name, bio, avatar_url, social_links, saved_count, badges')
+    .select('*')
     .eq('username', username)
     .single()
 
@@ -76,7 +76,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const [{ data: hubs }, { data: { user } }] = await Promise.all([
     supabase
       .from('hubs')
-      .select('id, title, description, slug, theme_color, template_id, updated_at, heart_count, save_count, view_count, share_count')
+      .select('id, title, description, slug, theme_color, template_id, updated_at')
       .eq('user_id', profile.id)
       .eq('privacy_mode', 'public')
       .eq('mode', 'landing')
