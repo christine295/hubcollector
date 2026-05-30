@@ -85,21 +85,24 @@ export default async function AdminPage({
     { data: hubs },
     { data: collections },
     { data: blocks, count: totalBlocks },
-    feedbackResult,
   ] = await Promise.all([
     adminClient.auth.admin.listUsers({ perPage: 1000 }),
     adminClient.from('profiles').select('id, username, email, display_name, created_at'),
     adminClient.from('hubs').select('id, user_id'),
     adminClient.from('collections').select('id, user_id'),
     adminClient.from('content_blocks').select('id', { count: 'exact' }),
-    adminClient.from('feedback')
-      .select('id, message, status, created_at, user_id, profiles(username, email)')
-      .order('created_at', { ascending: false })
-      .then(r => r)
-      .catch(() => ({ data: null, error: null })),
   ])
 
-  const feedback = (feedbackResult as any).data ?? []
+  let feedback: any[] = []
+  try {
+    const { data } = await adminClient
+      .from('feedback')
+      .select('id, message, status, created_at, user_id, profiles(username, email)')
+      .order('created_at', { ascending: false })
+    feedback = data ?? []
+  } catch {
+    // feedback table may not exist yet
+  }
 
   // ── Compute stats ────────────────────────────────────────────────────────────
 
