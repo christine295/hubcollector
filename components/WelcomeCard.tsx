@@ -21,6 +21,14 @@ type FeatureCardDef = {
 
 const FEATURE_CARDS: FeatureCardDef[] = [
   {
+    key: 'feature-clone-v1',
+    label: 'Just shipped',
+    isFounder: true,
+    title: 'Build it once, reuse it forever',
+    body: "Every Hub card now has a 'Clone as new list' button. Create a master packing list, grocery list, or any checklist — then clone it before each trip or shopping run. Pick the categories you need, name it, and start fresh. Your original stays untouched for next time.",
+    primaryButton: { text: 'Try the Packing List template »', href: '/dashboard/hub/new?template=packing' },
+  },
+  {
     key: 'feature-explore-v1',
     label: 'Just shipped',
     isFounder: true,
