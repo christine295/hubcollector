@@ -592,10 +592,10 @@ export default function HubView({ hub, blocks, color, isOwner, username, collect
 
       <footer className="border-t border-stone-100 py-5 text-center">
         <p className="text-xs text-stone-400">
-          Created with{' '}
+          ♥ Created with{' '}
           <a href="https://hubcollector.com" target="_blank" rel="noopener noreferrer" className="hover:text-stone-600 transition-colors underline underline-offset-2">
-            HubCollector™
-          </a>
+            HubCollector
+          </a>™
         </p>
       </footer>
     </div>
