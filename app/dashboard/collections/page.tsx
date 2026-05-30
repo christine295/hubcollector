@@ -5,6 +5,7 @@ import HubCard from '@/components/HubCard'
 import SavedHubCard from '@/components/SavedHubCard'
 import SiteFooter from '@/components/SiteFooter'
 import WelcomeCard from '@/components/WelcomeCard'
+import FeedbackModal from '@/components/FeedbackModal'
 import { VERSION } from '@/lib/version'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -124,6 +125,8 @@ export default function DashboardPage() {
   const [tagFilter, setTagFilter] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   function hubMatches(hub: any) {
     const q = searchQuery.toLowerCase()
@@ -144,6 +147,7 @@ export default function DashboardPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
+      setUserEmail(user.email ?? '')
 
       const [{ data: hubsData }, { data: foldersData }, { data: profile }, { data: savedData }] = await Promise.all([
         supabase.from('hubs').select('*').eq('user_id', user.id).order('title', { ascending: true }),
@@ -323,18 +327,38 @@ export default function DashboardPage() {
                   >
                     Edit Profile
                   </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setSettingsOpen(false)
-                      const supabase = createClient()
-                      await supabase.auth.signOut()
-                      router.push('/login')
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Sign out
-                  </button>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setSettingsOpen(false); setFeedbackOpen(true) }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Send feedback
+                    </button>
+                    {userEmail === 'christine@websketching.com' && (
+                      <button
+                        type="button"
+                        onClick={() => { setSettingsOpen(false); router.push('/admin') }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-violet-600 hover:bg-violet-50 transition-colors"
+                      >
+                        Admin
+                      </button>
+                    )}
+                  </div>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setSettingsOpen(false)
+                        const supabase = createClient()
+                        await supabase.auth.signOut()
+                        router.push('/login')
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -682,6 +706,8 @@ export default function DashboardPage() {
       </main>
 
       <SiteFooter />
+
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
 
       <EditCollectionModal
         open={editFolderOpen}
