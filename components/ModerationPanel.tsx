@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Status = 'active' | 'restricted' | 'suspended' | 'terminated'
-type ModalType = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'remove-content' | 'terminate'
+type ModalType = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'remove-content' | 'terminate' | 'gdpr-delete'
 
 const STATUS_STYLE: Record<Status, string> = {
   active:     'bg-emerald-50 text-emerald-700 border border-emerald-200',
@@ -46,8 +46,14 @@ const MODAL_COPY: Record<ModalType, { title: string; body: string; confirm: stri
   },
   terminate: {
     title: 'Terminate account?',
-    body: 'This will permanently delete their account, login credentials, all hubs, content, and collections. This cannot be undone.',
+    body: 'Their account will be permanently banned and all hubs and content deleted. Their email address stays reserved so they cannot re-register. This cannot be undone.',
     confirm: 'Terminate account',
+    danger: true,
+  },
+  'gdpr-delete': {
+    title: 'Delete account data (GDPR)?',
+    body: 'This complies with a right-to-erasure request. The auth record, profile, all hubs, content, and collections will be permanently deleted. Their email address will be freed and they will be able to re-register. Only use this for verified deletion requests.',
+    confirm: 'Delete all data',
     danger: true,
   },
 }
@@ -76,8 +82,9 @@ export default function ModerationPanel({
 
     let res: Response
 
-    if (action === 'terminate') {
-      res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
+    if (action === 'terminate' || action === 'gdpr-delete') {
+      const path = action === 'gdpr-delete' ? `/api/admin/users/${userId}/gdpr` : `/api/admin/users/${userId}`
+      res = await fetch(path, { method: 'DELETE' })
     } else if (action === 'remove-content') {
       res = await fetch(`/api/admin/users/${userId}/content`, { method: 'DELETE' })
     } else {
@@ -95,7 +102,7 @@ export default function ModerationPanel({
       return
     }
 
-    if (action === 'terminate') {
+    if (action === 'terminate' || action === 'gdpr-delete') {
       router.push('/admin')
       return
     }
@@ -159,11 +166,23 @@ export default function ModerationPanel({
               />
               <ActionButton
                 label="Terminate account"
-                description="Deletes account and all data"
+                description="Bans permanently · email stays taken"
                 onClick={() => setModal('terminate')}
                 variant="danger"
               />
             </div>
+          </div>
+
+          {/* GDPR */}
+          <div className="pt-3 border-t border-dashed border-gray-200">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">GDPR / Right to Erasure</p>
+            <p className="text-[11px] text-gray-400 mb-2">Only use for verified deletion requests. Frees the email address.</p>
+            <ActionButton
+              label="Delete account data"
+              description="Full deletion · email will be freed"
+              onClick={() => setModal('gdpr-delete')}
+              variant="danger-outline"
+            />
           </div>
         </div>
       )}
@@ -176,7 +195,7 @@ export default function ModerationPanel({
             <h3 className="text-base font-semibold text-gray-900 mb-2">{copy.title}</h3>
             <p className="text-sm text-gray-500 leading-relaxed mb-4">{copy.body}</p>
 
-            {modal === 'terminate' && (
+            {(modal === 'terminate' || modal === 'gdpr-delete') && (
               <div className="mb-4">
                 <p className="text-xs text-gray-500 mb-1.5">
                   Type <span className="font-mono font-semibold text-gray-700">{username}</span> to confirm
@@ -205,7 +224,7 @@ export default function ModerationPanel({
               <button
                 type="button"
                 onClick={() => runAction(modal)}
-                disabled={loading || (modal === 'terminate' && !terminateReady)}
+                disabled={loading || ((modal === 'terminate' || modal === 'gdpr-delete') && !terminateReady)}
                 className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                   copy.danger
                     ? 'bg-red-600 hover:bg-red-700 text-white'
