@@ -87,7 +87,7 @@ The leaderboard populates automatically once the engagement metrics SQL migratio
 | Type | What it does |
 |------|-------------|
 | `text` | Written notes, reflections, instructions. Supports optional label and date. Whitespace-preserved. |
-| `checklist` | Tap-to-complete list. Checked state stored in **browser localStorage** (per-device, not DB). "Begin again" resets. |
+| `checklist` | Tap-to-complete list. Checked state stored in **browser localStorage** (per-device, not DB). "Begin again" resets when all items are checked. Public view uses square checkboxes with a white checkmark; 44px minimum row height for comfortable mobile tapping. |
 | `audio` | Embedded audio player for any hosted URL. Optional label and recording date. |
 | `link` | Tappable row linking to an external URL. Opens in new tab. |
 | `phone` | Tap-to-call row. Opens device dialer. |
@@ -143,13 +143,14 @@ The dashboard (`/dashboard`) shows your collections at the top and your hubs bel
 - A default "My Hubs" collection is created automatically on first login if you have none.
 - Create a new collection with the **+ New collection** dashed button at the bottom of the collection list.
 
-**Header navigation:** HubCollector™ logo · **Explore** · **Profile** (links to your public `/h/[username]` page) · **Help** · ⚙ Settings gear (View Profile · Edit Profile · Sign out).
+**Header navigation (desktop):** HubCollector™ logo · **Explore** · **Profile** · **Help** · ⚙ Settings gear (View Profile · Edit Profile · Send feedback · Sign out). On mobile, Explore/Profile/Help collapse into a **☰ hamburger menu**; the ⚙ gear remains for account actions.
 
 **Collections** are sorted **A–Z by name**. Uncollected always appears last. Create, rename, and delete via the ⋮ button on each collection card.
 
 **Hub cards:**
 - Click anywhere on a hub card to open the edit page.
-- The ⋮ button opens a menu: **Edit**, **View** (opens public page), **Copy link**, **Download QR**, **Print card**, **Move to collection**.
+- Each card has a visible **"Clone as new list →"** strip above the tags/date row — see Clone Hub below.
+- The ⋮ button opens a menu: **Edit**, **View** (opens public page), **Copy link**, **Download QR**, **Print card**, **Clone as new list**, **Move to collection**.
 - Tags appear at the bottom-left of the card and are clickable to filter the hub list by that tag.
 - The updated date appears bottom-right on each card. ♥ and 🔖 counts appear next to the date once the hub has hearts or saves.
 
@@ -167,6 +168,27 @@ The dashboard (`/dashboard`) shows your collections at the top and your hubs bel
 **Hub type badge:**
 - When creating a hub from a template, the template name (e.g. "🐾 Pet Profile") appears as a badge on the dashboard card.
 - For hubs created from Blank, or to re-label any hub, go to the hub's **Settings tab → Hub type** dropdown. Changing this adds the badge only — it does not add or remove content blocks.
+
+---
+
+## Clone Hub
+
+**Build it once, reuse it forever.**
+
+Every hub card has a **"Clone as new list →"** button visible directly on the card. Tapping it opens a panel where you can:
+
+1. **Name the new hub** — pre-filled as "Copy of [original name]"
+2. **Select which blocks to include** — all blocks are checked by default; uncheck any categories you don't need
+3. Tap **Clone Hub** — a new private hub is created with only the selected blocks
+
+The original hub is unchanged and stays as your master template. The cloned hub starts fresh — checklist items are always unchecked in the new hub (checked state is stored per-device in localStorage, keyed by block ID, so new block IDs start empty automatically).
+
+**Typical flow:**
+- Create a master "Packing List" hub with blocks for every trip scenario (Clothing, Tech, Toiletries, Beach Add-On, Hiking Add-On, Kids Add-On, etc.)
+- Before each trip, clone it, deselect the categories you don't need (e.g. uncheck Hiking Add-On for a beach trip), name it "Bali June 2026", and clone
+- Check items off as you pack; the master template is untouched for next time
+
+**API:** `POST /api/hub/[hubId]/clone` — verifies ownership, auto-deduplicates the slug (tries base, base-2, base-3…), creates the new hub (private by default), and inserts the selected blocks in their original sort order.
 
 ---
 
@@ -464,38 +486,55 @@ Creates **9 content blocks** via `Promise.all` to the API route.
 
 ### Grocery List (`grocery`)
 Pre-fills: title "Grocery List", green theme (`#22C55E`).  
-Creates **10 content blocks** via `Promise.all` to the API route.
+Creates **20 content blocks** via `Promise.all` to the API route. Organized by store aisle/department for a full-store shopping template. Clone as new list before each week's shop and deselect sections you don't need.
 
-| # | Label | Type | Notes |
+| # | Label | Type | Items |
 |---|-------|------|-------|
-| 1 | Meal Plan Notes | text | Pre-filled: meals for the week, recipe reminders, household requests |
-| 2 | Produce | checklist | 5 items: Lettuce/greens, Tomatoes, Onions, Potatoes, Fruit |
-| 3 | Meat & Seafood | checklist | 4 items: Chicken, Ground beef, Lunch meat, Fish/seafood |
-| 4 | Dairy & Eggs | checklist | 5 items: Milk, Eggs, Cheese, Yogurt, Butter |
-| 5 | Pantry | checklist | 5 items: Pasta/rice, Canned goods, Bread, Cereal, Snacks |
-| 6 | Spices & Baking | checklist | 5 items: Salt/pepper, Garlic powder, Flour, Sugar, Baking items |
-| 7 | Frozen | checklist | 3 items: Frozen vegetables, Frozen meals, Ice cream |
-| 8 | Household | checklist | 4 items: Paper towels, Toilet paper, Cleaning supplies, Trash bags |
-| 9 | Recipe Link | link | Optional — link to a recipe being shopped for |
-| 10 | Store Notes / Coupons | text | Coupon reminders, store-specific notes, brand preferences |
+| 1 | Meal Plan Notes | text | Pre-filled placeholder |
+| 2 | Produce | checklist | 20 items: Apples, Bananas, Berries, Grapes, Oranges, Lemons, Lettuce, Spinach, Kale, Tomatoes, Cucumbers, Bell Peppers, Onions, Potatoes, Sweet Potatoes, Carrots, Celery, Broccoli, Garlic, Avocados |
+| 3 | Dairy & Refrigerated | checklist | 10 items: Milk, Cream, Butter, Eggs, Yogurt, Cottage Cheese, Sour Cream, Cream Cheese, Shredded Cheese, Sliced Cheese |
+| 4 | Meat & Seafood | checklist | 10 items: Chicken Breast, Ground Beef, Steak, Pork Chops, Bacon, Sausage, Deli Meat, Salmon, Shrimp, Frozen Fish |
+| 5 | Bakery | checklist | 7 items: Bread, Bagels, English Muffins, Hamburger Buns, Hot Dog Buns, Tortillas, Rolls |
+| 6 | Pantry | checklist | 16 items: Pasta, Rice, Cereal, Oatmeal, Flour, Sugar, Brown Sugar, Baking Powder, Breadcrumbs, Crackers, Peanut Butter, Jelly, Soup, Canned Vegetables, Canned Beans, Pasta Sauce |
+| 7 | Frozen Foods | checklist | 6 items: Frozen Vegetables, Frozen Fruit, Frozen Pizza, Ice Cream, Frozen Meals, Frozen Waffles |
+| 8 | Snacks | checklist | 8 items: Chips, Pretzels, Popcorn, Granola Bars, Crackers, Nuts, Trail Mix, Cookies |
+| 9 | Beverages | checklist | 6 items: Bottled Water, Sparkling Water, Juice, Coffee, Tea, Soda |
+| 10 | Condiments & Sauces | checklist | 9 items: Ketchup, Mustard, Mayonnaise, Salad Dressing, BBQ Sauce, Hot Sauce, Soy Sauce, Olive Oil, Vinegar |
+| 11 | Herbs, Spices & Baking | checklist | 8 items: Salt, Pepper, Garlic Powder, Onion Powder, Cinnamon, Italian Seasoning, Paprika, Vanilla Extract |
+| 12 | Household Supplies | checklist | 10 items: Paper Towels, Toilet Paper, Facial Tissues, Trash Bags, Aluminum Foil, Plastic Wrap, Food Storage Bags, Dish Soap, Dishwasher Detergent, Laundry Detergent |
+| 13 | Cleaning Supplies | checklist | 5 items: All-Purpose Cleaner, Glass Cleaner, Disinfecting Wipes, Sponges, Mop Refills |
+| 14 | Personal Care | checklist | 10 items: Toothpaste, Toothbrushes, Shampoo, Conditioner, Body Wash, Soap, Deodorant, Razors, Shaving Cream, Lotion |
+| 15 | Pet Supplies | checklist | 4 items: Pet Food, Pet Treats, Cat Litter, Waste Bags |
+| 16 | Pharmacy | checklist | 5 items: Pain Reliever, Allergy Medication, Cold Medicine, Vitamins, First Aid Supplies |
+| 17 | Seasonal / Holiday | checklist | 4 items: Party Supplies, Greeting Cards, Gift Wrap, Holiday Ingredients |
+| 18 | Other | checklist | 3 items: Special Requests, Weekly Meal Ingredients, Store-Specific Items |
+| 19 | Recipe Link | link | Optional — link to a recipe being shopped for |
+| 20 | Store Notes / Coupons | text | Coupon reminders, store-specific notes, brand preferences |
 
 ### Travel Packing List (`packing`)
 Pre-fills: title "Packing List", amber theme (`#F59E0B`).  
-Creates **11 content blocks** via `Promise.all` to the API route.
+Creates **18 content blocks** via `Promise.all` to the API route. Designed as a master packing template — clone as new list before each trip and deselect the add-on categories (Beach, Hiking, Kids) you don't need. Clothing items include suggested quantities.
 
-| # | Label | Type | Notes |
+| # | Label | Type | Items / Notes |
 |---|-------|------|-------|
 | 1 | Trip Details | text | Pre-filled: Destination, dates, weather, travel companions, notes |
-| 2 | Essentials | checklist | 6 items: Wallet, ID/passport, Keys, Phone, Charger, Medications |
-| 3 | Clothing | checklist | 7 items: Shirts, Pants/shorts, Pajamas, Socks, Underwear, Shoes, Jacket |
-| 4 | Toiletries | checklist | 6 items: Toothbrush, Toothpaste, Shampoo, Deodorant, Hairbrush, Makeup/skincare |
-| 5 | Tech | checklist | 5 items: Phone charger, Laptop/tablet, Headphones, Power bank, Camera |
-| 6 | Travel Documents | checklist | 5 items: Tickets, Hotel confirmation, Rental car, Insurance cards, Emergency contacts |
-| 7 | Itinerary / Tickets | file | Upload PDF or paste URL |
-| 8 | Hotel / Airbnb | link | Booking confirmation link |
-| 9 | Map / Directions | link | Maps, navigation, or offline directions |
-| 10 | Emergency Contact | phone | Tap-to-call emergency contact number |
-| 11 | Last-Minute Reminders | text | Things to do before leaving or on the way |
+| 2 | Travel Essentials | checklist | 8 items: Wallet, ID / Driver's License, Passport, Keys, Cash, Credit Cards, Sunglasses, Reusable Water Bottle |
+| 3 | Clothing | checklist | 14 items: Shirts (x3), Jeans (x1), Shorts (x2), Sweatshirt, Sweatpants, Swimsuit, Swimsuit Cover-Up, Pajamas, Socks (x5), Underwear / Bras (x5), Jacket / Sweater, Sneakers, Sandals, Hat |
+| 4 | Toiletries | checklist | 17 items: Toothbrush, Toothpaste, Floss, Shampoo, Conditioner, Deodorant, Face Wash, Moisturizer, Sunscreen, Lip Balm, Hair Brush / Comb, Makeup, Makeup Remover, Tweezers, Contact Solution, Contact Case, Glasses |
+| 5 | Tech | checklist | 10 items: Phone Charger, Laptop / Tablet, Laptop Charger, AirPods / Earbuds, Noise-Cancelling Headphones, Power Bank, Smart Watch Charger, Kindle / E-Reader, Camera, USB Charging Hub |
+| 6 | Travel Documents | checklist | 5 items: Tickets, Hotel Confirmation, Rental Car Info, Insurance Cards, Emergency Contacts |
+| 7 | Health & Wellness | checklist | 5 items: Daily Medications, Vitamins & Supplements, Allergy Medication, Pain Reliever, Bandages / First Aid Items |
+| 8 | Personal Item / Purse | checklist | 5 items: Purse, Snacks, Mints, Hand Sanitizer, Tissues |
+| 9 | Carry-On / Backpack | checklist | 8 items: Phone, Wallet, Travel Documents, Charger, Headphones, Kindle, Water Bottle, Snacks |
+| 10 | Beach Add-On | checklist | 6 items: Beach Towel, Beach Bag, Extra Swimsuit, Sunscreen, Sunglasses, Sandals |
+| 11 | Hiking Add-On | checklist | 8 items: Hiking Boots, Hiking Outfit, Daypack, Trail Snacks, Water Bottle, Trekking Poles, Rain Jacket, Headlamp |
+| 12 | Kids Add-On | checklist | 8 items: Favorite Toy, Tablet, Tablet Charger, Snacks, Pajamas (x2), Extra Clothes (x2), Blanket, Stuffed Animal |
+| 13 | Before You Leave | checklist | 7 items: Lock Doors, Adjust Thermostat, Take Out Trash, Pause Mail, Confirm Reservations, Check Weather Forecast, Charge Devices |
+| 14 | Itinerary / Tickets | file | Upload PDF or paste URL |
+| 15 | Hotel / Airbnb | link | Booking confirmation link |
+| 16 | Map / Directions | link | Maps, navigation, or offline directions |
+| 17 | Emergency Contact | phone | Tap-to-call emergency contact number |
+| 18 | Last-Minute Reminders | text | Things to do before leaving or on the way |
 
 ### Vehicle Maintenance (`vehicle`)
 Pre-fills: title "My Vehicle", slate theme (`#64748B`).  
@@ -553,7 +592,7 @@ Creates **2 content blocks** via `Promise.all` to the API route.
 - Blocks render as hairline-separated rows (`divide-y divide-stone-100`), not stacked cards
 - Collapsed: `text-sm font-medium text-stone-500`, `py-3`, quiet
 - Expanded: `font-semibold text-stone-800`, content indented `pl-6`
-- Checklist: 8px circle bullets (no checkbox box)
+- Checklist: 20px square checkboxes with white checkmark SVG when checked; 44px min-height rows for mobile tap targets; "Begin again" appears only when all items are checked
 - Link/phone/file: quiet text rows with small accent icon + arrow, no button styling
 - Image blocks: edge-to-edge within column, `rounded-xl`
 - Timeline: thin accent-color vertical line, tiny dots with box-shadow ring

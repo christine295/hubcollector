@@ -52,40 +52,58 @@ app/
   settings/profile/page.tsx         — profile editing (client component); display_name, bio, avatar upload, social links; PATCH /api/profile
 
 components/
-  HubCard.tsx              — dashboard card; clickable (navigates to edit); ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; tags bottom-left, updated date bottom-right; TEMPLATE_LABELS covers all 19 non-blank templates; redirect hubs show redirect_url in amber below the title
-  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; all *_BLOCKS consts; tabs on edit (Content / Settings); Settings tab includes danger zone with DeleteHubForm at the bottom; accepts initialTemplateId prop (skips template picker, pre-applies template); mode selector has inline explanation text and destination URL field appears immediately below the buttons when Redirect Link is selected
-  HelpTemplateGrid.tsx     — client component for the help page template section; renders 2-col card grid with "Create this Hub »" CTA and "See blocks" button; "See blocks" opens a lightbox modal with block-by-block detail table and prominent Create CTA; accepts templates and isLoggedIn props
-  HubView.tsx              — PUBLIC hub renderer (client component); all interactive logic
-  ContentBlocksEditor.tsx  — block editor; auto-opens first block on load; sequential Save/Close/Remove flow; FormActions renders [Save][Close][Remove] — Remove deletes block and clears editing state, only shown when editing existing blocks (not adding new); FormShell is now a plain container (no Cancel button); green dot = has content, hollow ring = empty; drag-and-drop block reordering via dnd-kit (6-dot grip handle); ▲▼ arrow buttons kept as accessibility fallback
-  WelcomeCard.tsx          — founder onboarding card shown on dashboard; 8 cards total (3 journey + 4 feature + 1 closing journey); all isFounder=true with Christine's photo; localStorage key hc_dismissed_cards; see WelcomeCard section
-  SavedHubCard.tsx         — dashboard card for saved (non-owned) hubs; shows title, owner @username, template badge, Updated badge (hub.updated_at > saved_hub.last_viewed_at), collection badge; links to public view; ⋮ kebab (View Hub / Remove from Saved / Move to Collection); shows title, owner @username, template badge, Updated badge (hub.updated_at > saved_hub.last_viewed_at), collection badge; links to public view; ⋮ kebab (View Hub / Remove from Saved / Move to Collection)
+  HubCard.tsx              — dashboard card; clickable (navigates to edit); visible "Clone as new list →" strip above tags/date row; ⋮ kebab (Edit/View/Copy link/Download QR/Print card/Clone as new list/Move to collection); colored left border from hub.theme_color (3px inline style); template badge + mode + privacy pills; account status badge (restricted/suspended) shown when not active
+  HubForm.tsx              — create/edit form; TEMPLATES array; BLOCKS_BY_TEMPLATE map; all *_BLOCKS consts; tabs on edit (Content / Settings); slug auto-resolves collisions on create (tries base, base-2, …); 42501 RLS error shows friendly "account restricted" message
+  CloneHubModal.tsx        — modal for cloning a hub; fetches blocks on open; all checked by default; All/None shortcuts; title pre-filled "Copy of …"; calls POST /api/hub/[hubId]/clone; redirects to edit on success
+  HelpTemplateGrid.tsx     — client component for the help page template section
+  HubView.tsx              — PUBLIC hub renderer (client component); checklist uses 20px square checkboxes with white checkmark SVG, 44px min-height rows; footer shows "♥ Created with HubCollector™" (linked, TM unlinked) instead of SiteFooter
+  ContentBlocksEditor.tsx  — block editor; checklist edit form has no ☐ symbol, full-width dashed "+ Add item" button separated from FormActions; sequential Save/Close/Remove flow; dnd-kit drag-and-drop reordering
+  WelcomeCard.tsx          — founder onboarding; 9 cards total (3 journey + 5 feature + 1 closing); localStorage key hc_dismissed_cards; see WelcomeCard section
+  FeedbackModal.tsx        — modal for submitting feedback; calls POST /api/feedback; shows ✓ confirmation; "Christine reads every one" copy
+  FeedbackPanel.tsx        — admin client component; filter by status (new/read/resolved); optimistic status updates via PATCH /api/admin/feedback/[id]
+  ModerationPanel.tsx      — admin client component on /admin/users/[id]; Restrict/Unrestrict/Suspend/Unsuspend + Remove content + Terminate (ban+keep email) + GDPR delete (true erasure, frees email); terminate and GDPR both require typing username; redirects to /admin after terminal actions
+  SavedHubCard.tsx         — dashboard card for saved (non-owned) hubs; ⋮ kebab (View Hub / Remove from Saved / Move to Collection)
   ChecklistBlock.tsx       — standalone checklist component (used only in edit preview)
-  DeleteHubForm.tsx        — delete confirmation; used in HubForm Settings danger zone (not in edit page header)
+  DeleteHubForm.tsx        — delete confirmation; used in HubForm Settings danger zone
   QRButton.tsx             — downloads QR PNG via qrcode package
-  SiteFooter.tsx           — footer used on dashboard, help, and legal pages; nav links (Privacy · Terms · Acceptable Use · Licensing FAQ) + trademark line + copyright line
+  SiteFooter.tsx           — footer used on dashboard, help, and legal pages (NOT on public hub pages); nav links + trademark + copyright
+
+app/
+  admin/page.tsx                    — admin dashboard (Christine-only, gated by email); tabs: Overview (stats + users table with account_status badges + View links), Feedback (FeedbackPanel), Welcome Cards (full card content), Roadmap (hardcoded ROADMAP const)
+  admin/users/[id]/page.tsx         — user detail view; sticky red admin banner; profile info, activity stats, hub table, collections; ModerationPanel at top
 
 app/api/hub/[hubId]/
   content_blocks/route.ts      — GET (list), POST (create) content blocks
   content_blocks/[id]/route.ts — PATCH (update data or sort_order), DELETE
+  clone/route.ts               — POST; verifies ownership; auto-deduplicates slug; creates new hub (private) + selected blocks in sort order
   save/route.ts                — POST (save hub), DELETE (unsave), PATCH (update collection_id on saved_hubs row)
   heart/route.ts               — POST (heart hub), DELETE (unheart)
-  share/route.ts               — POST (increment share_count via increment_share_count RPC; no auth required)
+  share/route.ts               — POST (increment share_count via RPC; no auth required)
 
-app/api/profile/route.ts       — PATCH (update display_name, bio, avatar_url, social_links for current user)
+app/api/feedback/route.ts              — POST; authenticated users submit feedback (message); inserts to feedback table
+app/api/admin/feedback/[id]/route.ts   — PATCH; admin-only; updates feedback status (new/read/resolved)
+app/api/admin/users/[id]/route.ts      — DELETE; terminate: bans 876000h + account_status=terminated + deletes hubs; keeps auth record so email stays taken
+app/api/admin/users/[id]/status/route.ts  — PATCH; actions: restrict/unrestrict/suspend/unsuspend; suspend also calls Supabase auth ban
+app/api/admin/users/[id]/content/route.ts — DELETE; removes all user's hubs (cascades blocks)
+app/api/admin/users/[id]/gdpr/route.ts    — DELETE; true auth user deletion for GDPR/erasure requests; frees email
+app/api/profile/route.ts               — PATCH (update display_name, bio, avatar_url, social_links for current user)
 
 lib/
-  types.ts                    — Hub, ContentBlock, Profile, SavedHub types; Hub includes view_count, share_count, heart_count, save_count; Profile includes display_name, bio, avatar_url, social_links, saved_count
-  version.ts                  — VERSION constant (e.g. 'v0.1'); displayed in dashboard header
+  types.ts                    — Hub, ContentBlock, Profile, SavedHub types
+  version.ts                  — VERSION constant (e.g. 'v0.1'); displayed in dashboard header (desktop only)
   supabase/client.ts          — browser Supabase client
-  supabase/server.ts          — server Supabase client
+  supabase/server.ts          — server Supabase client (anon key + user auth context)
+  supabase/admin.ts           — service role client (bypasses RLS); requires SUPABASE_SERVICE_ROLE_KEY env var; server-only
   supabase/uploadPhoto.ts     — upload image to hub-photos Storage bucket
   supabase/uploadAudio.ts     — upload audio to hub-audio Storage bucket
   supabase/uploadAvatar.ts    — upload avatar to hub-photos bucket under avatars/${userId}/ prefix
 
-lib/config.ts               — global feature flags; `BETA_PHASE = true` auto-assigns 🧪 Beta Tester badge to all profile pages; set to false when beta ends
+lib/config.ts               — global feature flags; `BETA_PHASE = true` auto-assigns 🧪 Beta Tester badge to all profile pages
+ADMIN_EMAIL constant         — 'christine@websketching.com'; hardcoded in all admin routes and pages
 
-proxy.ts            — Next.js 16 proxy (replaces middleware.ts); protects /dashboard routes; preserves full path+search as ?next= when redirecting unauthenticated users to /login
+proxy.ts            — Next.js 16 proxy (replaces middleware.ts); protects /dashboard routes
 supabase/schema.sql — full DB schema + RLS policies
+supabase/admin_report.sql — internal SQL report (7 queries); run sections individually in Supabase SQL editor (CTE replaced with inline subquery for compatibility)
 HELP.md             — developer reference: block shapes, design notes, template authoring guide
 ```
 
@@ -196,7 +214,9 @@ Any `text` block whose label contains `invocation`, `words to speak`, `quote`, `
 
 Defined in `TEMPLATES` array in `components/HubForm.tsx`. Template picker shown before create form. All blocks are created via `BLOCKS_BY_TEMPLATE` record in `handleSubmit` — no per-template branching needed.
 
-**20 templates (alphabetical, Blank first):** Blank, Artwork Archive (8 blocks), Book / Reading Notes (7 blocks), Daily Reflection / Journal (10 blocks), Diary / Life Log (10 blocks), Garden Planner (9 blocks), Goal / Habit Tracker (6 blocks), Grocery List (10 blocks), Home Maintenance Log (8 blocks), Hub Collector (2 blocks), Pet Profile (8 blocks), Plant Profile (8 blocks), Recipe (8 blocks), Ritual (14 blocks), Shadow Work Journal (12 blocks), Travel Journal (7 blocks), Travel Packing List (11 blocks), Vehicle Maintenance (9 blocks), What's in the Box? (8 blocks), Workout Tracker (8 blocks).
+**20 templates (alphabetical, Blank first):** Blank, Artwork Archive (8 blocks), Book / Reading Notes (7 blocks), Daily Reflection / Journal (10 blocks), Diary / Life Log (10 blocks), Garden Planner (9 blocks), Goal / Habit Tracker (6 blocks), Grocery List (20 blocks), Home Maintenance Log (8 blocks), Hub Collector (2 blocks), Pet Profile (8 blocks), Plant Profile (8 blocks), Recipe (8 blocks), Ritual (14 blocks), Shadow Work Journal (12 blocks), Travel Journal (7 blocks), Travel Packing List (18 blocks), Vehicle Maintenance (9 blocks), What's in the Box? (8 blocks), Workout Tracker (8 blocks).
+
+Both Grocery List and Travel Packing List are designed as **master clone templates** — the user creates the hub once, then clones it (selecting only needed categories) for each use. See Clone Hub section below.
 
 See `HELP.md` for the full block-by-block breakdown of each template.
 
@@ -222,7 +242,8 @@ New blocks are inserted with `sort_order: blocks.length`.
 **File:** `app/dashboard/collections/page.tsx` (client component)
 
 - Background: `bg-[#FAF9F7]` (warm cream, matches public hub view)
-- Header: HubCollector™ logo + bordered **Explore**, **Profile** (`/h/[username]`), **Help** links + ⚙ **Settings gear** dropdown (View Profile · Edit Profile · Sign out)
+- Header (desktop): HubCollector™ logo + VERSION + bordered **Explore**, **Profile**, **Help** links + ⚙ **Settings gear** dropdown (View Profile · Edit Profile · Send feedback · [Admin — Christine only] · Sign out)
+- Header (mobile): logo only + **☰ hamburger** (Explore/Profile/Help as full-width tappable rows) + ⚙ gear; VERSION hidden on mobile
 - Stats line: `X Hubs · X Collections · X Saved` (Saved only shown when > 0) above the `+ New Hub` CTA
 - **WelcomeCard** renders below stats (see WelcomeCard section)
 - **Collections** section: sorted **A→Z by title** (DB query uses `.order('title', { ascending: true })`); empty collections show `empty` in muted italic instead of `0 Hubs`; **Uncollected** (computed) always renders last
@@ -245,13 +266,14 @@ New blocks are inserted with `sort_order: blocks.length`.
 | 1 | `journey-welcome-v1` | hubCount === 0 | "Hi, I'm Christine" — founder intro, create first hub CTA |
 | 2 | `journey-first-hub-v1` | hubCount === 1 | "You've created your first Hub" — print QR CTA |
 | 3 | `journey-growing-v1` | hubCount >= 2 | "You're building something" — create Collection CTA |
-| 4 | `feature-explore-v1` | hubCount >= 1 | "I built you a place to explore" — Explore page CTA |
-| 5 | `feature-save-hubs-v1` | hubCount >= 1 | "You can now save other people's Hubs" |
-| 6 | `feature-profile-v1` | hubCount >= 1 | "Your profile page is live" — Edit Profile CTA |
-| 7 | `feature-social-v1` | hubCount >= 1 | "Hearts, shares, and views" |
-| 8 | `journey-established-v1` | hubCount >= 4 | "You've got the hang of it" — closing, shown only after feature cards 4–7 are dismissed |
+| 4 | `feature-clone-v1` | hubCount >= 1 | "Build it once, reuse it forever" — Clone Hub feature; CTA → /dashboard/hub/new?template=packing |
+| 5 | `feature-explore-v1` | hubCount >= 1 | "I built you a place to explore" — Explore page CTA |
+| 6 | `feature-save-hubs-v1` | hubCount >= 1 | "You can now save other people's Hubs" |
+| 7 | `feature-profile-v1` | hubCount >= 1 | "Your profile page is live" — Edit Profile CTA |
+| 8 | `feature-social-v1` | hubCount >= 1 | "Hearts, shares, and views" |
+| 9 | `journey-established-v1` | hubCount >= 4 | "You've got the hang of it" — closing, shown only after all feature cards dismissed |
 
-All cards use `isFounder: true` — Christine's photo + warm first-person voice. Label chip: journey cards use milstone labels (`Welcome`, `Next step`, etc.); feature cards use `Just shipped`. **Adding a new feature card:** add an entry to `FEATURE_CARDS` in `WelcomeCard.tsx`; bump key suffix (`v2`) to resurface an updated announcement.
+All cards use `isFounder: true` — Christine's photo + warm first-person voice. Feature cards use `Just shipped` label. **Adding a new feature card:** add to `FEATURE_CARDS` array in `WelcomeCard.tsx` (first entry = first shown after journey cards); bump key suffix (`v2`) to resurface an updated announcement.
 
 All cards have an × dismiss button. Founder photo: `/public/Christine.jpg` (circular avatar, `object-top` crop). Falls back to teal "C" initial if photo missing.
 
@@ -488,3 +510,79 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS username_confirmed boolean 
 -- Mark existing users as already confirmed (they went through the migration)
 UPDATE public.profiles SET username_confirmed = true WHERE username IS NOT NULL;
 ```
+
+**Feedback table + account moderation (2026-05-30):**
+
+```sql
+-- Feedback table
+CREATE TABLE public.feedback (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  message text NOT NULL,
+  created_at timestamptz DEFAULT now() NOT NULL,
+  status text NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'read', 'resolved'))
+);
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can submit feedback" ON public.feedback FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can read own feedback" ON public.feedback FOR SELECT USING (auth.uid() = user_id);
+
+-- Account moderation status
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_status text
+  NOT NULL DEFAULT 'active'
+  CHECK (account_status IN ('active', 'restricted', 'suspended', 'terminated'));
+
+-- Restrict hub creation for non-active accounts (replaces the simple INSERT policy)
+DROP POLICY IF EXISTS "Users can insert own hubs" ON public.hubs;
+CREATE POLICY "Users can insert own hubs" ON public.hubs FOR INSERT
+  WITH CHECK (auth.uid() = user_id AND EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND account_status = 'active'
+  ));
+```
+
+## Clone Hub
+
+`POST /api/hub/[hubId]/clone` — owner-only. Body: `{ title: string, selectedBlockIds: string[] }`.
+
+- Verifies ownership via `eq('user_id', user.id)` on the source hub
+- Auto-deduplicates slug: tries `base`, `base-2`, … `base-10`, falls back to `base-${Date.now()}`
+- Creates new hub copying: `mode`, `redirect_url`, `description`, `theme_color`, `template_id`, `collection_id`, `tags`; `privacy_mode` always `'private'`
+- Inserts selected blocks filtered by `hub_id = hubId AND id IN selectedBlockIds`, re-numbered `sort_order 0,1,2,…`
+- Returns `{ hub: { id, slug } }`; client redirects to `/dashboard/hub/[id]/edit`
+
+`CloneHubModal.tsx` — all blocks pre-checked; All/None shortcuts; type-color badges; title pre-filled "Copy of …". Checklist checked state is localStorage-keyed by block ID — new block IDs start fresh automatically, no reset needed.
+
+## Admin Dashboard
+
+**Route:** `/admin` — server component; gated by `user.email === 'christine@websketching.com'`; uses `createAdminClient()` (service role, bypasses RLS).
+
+**Requires:** `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and Vercel environment variables.
+
+**Tabs (URL-based via `searchParams.tab`):**
+- `''` (Overview) — stat cards (users, active 7d/30d, hubs, blocks, new feedback) + users table with activity status + account_status badges; View → links to user detail
+- `feedback` — FeedbackPanel client component; filter new/read/resolved; Mark read / Resolve buttons
+- `cards` — all 9 welcome cards with full body text and CTA
+- `roadmap` — hardcoded ROADMAP const in `app/admin/page.tsx`; edit in code
+
+**User detail:** `/admin/users/[id]` — sticky red "Admin Access — Read Only" banner; profile info, activity stats, hub table with block counts; ModerationPanel.
+
+## Account Moderation
+
+**ModerationPanel** (`components/ModerationPanel.tsx`) — client component on user detail page.
+
+| Action | API | Effect |
+|---|---|---|
+| Restrict | PATCH /status `{action:'restrict'}` | Sets `account_status='restricted'`; RLS blocks new hub creation |
+| Unrestrict | PATCH /status `{action:'unrestrict'}` | Sets `account_status='active'` |
+| Suspend | PATCH /status `{action:'suspend'}` | Supabase auth ban (876000h) + `account_status='suspended'` |
+| Unsuspend | PATCH /status `{action:'unsuspend'}` | Lifts ban + `account_status='active'` |
+| Remove content | DELETE /content | Deletes all hubs (cascades blocks, saved_hubs, hub_hearts) |
+| Terminate | DELETE /[id] | Ban + `account_status='terminated'` + delete hubs; keeps auth record (email stays taken); requires typing username |
+| GDPR delete | DELETE /gdpr | True auth user deletion; frees email; only for verified erasure requests; requires typing username |
+
+RLS error code `42501` maps to friendly "Your account has been restricted" message in HubForm.
+
+## Feedback System
+
+Users submit via **Send feedback** in the ⚙ settings dropdown → `FeedbackModal` → `POST /api/feedback`.
+Admin views and manages via `/admin?tab=feedback` → `FeedbackPanel` → `PATCH /api/admin/feedback/[id]`.
+Status flow: `new` → `read` → `resolved`.
