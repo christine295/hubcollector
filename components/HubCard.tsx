@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Hub } from '@/lib/types'
 import QRButton from './QRButton'
+import CloneHubModal from './CloneHubModal'
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(iso))
@@ -49,6 +50,7 @@ export default function HubCard({
 }) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [cloneOpen, setCloneOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/h/${username}/${hub.slug}`
 
@@ -155,6 +157,13 @@ export default function HubCard({
                 >
                   Print card
                 </Link>
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setMenuOpen(false); setCloneOpen(true) }}
+                  className="w-full text-left flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Clone as new list
+                </button>
                 {folders !== undefined && (
                   <div
                     onClick={e => e.stopPropagation()}
@@ -204,6 +213,14 @@ export default function HubCard({
           )}
         </div>
       </div>
+
+      {cloneOpen && (
+        <CloneHubModal
+          hubId={hub.id}
+          hubTitle={hub.title}
+          onClose={() => setCloneOpen(false)}
+        />
+      )}
 
       {/* Bottom row: tags left, date right */}
       <div className="flex items-end justify-between gap-2 mt-2 pt-2 border-t border-gray-100">

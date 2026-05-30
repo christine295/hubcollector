@@ -1,5 +1,5 @@
 -- ============================================================
--- QRMagNotes — Internal Admin / Testing Report
+-- HubCollector — Internal Admin / Testing Report
 -- Run in Supabase SQL Editor (authenticated as postgres / service role)
 -- NOT exposed publicly. RLS does not apply in the SQL editor.
 -- ============================================================
@@ -10,36 +10,6 @@
 -- ════════════════════════════════════════════════════════════
 -- Columns marked [not tracked] require additional instrumentation.
 
-WITH user_stats AS (
-  SELECT
-    p.id                                                          AS user_id,
-    p.email,
-    p.username,
-    p.created_at                                                  AS signed_up_at,
-    u.last_sign_in_at,
-
-    COUNT(DISTINCT col.id)                                        AS collections_count,
-    COUNT(DISTINCT h.id)                                         AS hubs_count,
-    COUNT(DISTINCT cb.id)                                        AS blocks_count,
-
-    -- Photo/image blocks (proxy for uploaded photos — not a share count)
-    COUNT(DISTINCT cb.id) FILTER (WHERE cb.type = 'image')       AS image_blocks,
-    -- Audio/voice note blocks
-    COUNT(DISTINCT cb.id) FILTER (WHERE cb.type = 'audio')       AS audio_blocks,
-
-    -- Most recent content activity across hubs and blocks
-    GREATEST(
-      MAX(h.updated_at),
-      MAX(cb.updated_at)
-    )                                                             AS last_content_activity_at
-
-  FROM public.profiles p
-  LEFT JOIN auth.users u            ON u.id        = p.id
-  LEFT JOIN public.collections col  ON col.user_id = p.id
-  LEFT JOIN public.hubs h           ON h.user_id   = p.id
-  LEFT JOIN public.content_blocks cb ON cb.hub_id  = h.id
-  GROUP BY p.id, p.email, p.username, p.created_at, u.last_sign_in_at
-)
 SELECT
   user_id,
   email,
@@ -71,7 +41,36 @@ SELECT
     ELSE 'inactive'
   END                                               AS status
 
-FROM user_stats
+FROM (
+  SELECT
+    p.id                                                          AS user_id,
+    p.email,
+    p.username,
+    p.created_at                                                  AS signed_up_at,
+    u.last_sign_in_at,
+
+    COUNT(DISTINCT col.id)                                        AS collections_count,
+    COUNT(DISTINCT h.id)                                         AS hubs_count,
+    COUNT(DISTINCT cb.id)                                        AS blocks_count,
+
+    -- Photo/image blocks (proxy for uploaded photos — not a share count)
+    COUNT(DISTINCT cb.id) FILTER (WHERE cb.type = 'image')       AS image_blocks,
+    -- Audio/voice note blocks
+    COUNT(DISTINCT cb.id) FILTER (WHERE cb.type = 'audio')       AS audio_blocks,
+
+    -- Most recent content activity across hubs and blocks
+    GREATEST(
+      MAX(h.updated_at),
+      MAX(cb.updated_at)
+    )                                                             AS last_content_activity_at
+
+  FROM public.profiles p
+  LEFT JOIN auth.users u            ON u.id        = p.id
+  LEFT JOIN public.collections col  ON col.user_id = p.id
+  LEFT JOIN public.hubs h           ON h.user_id   = p.id
+  LEFT JOIN public.content_blocks cb ON cb.hub_id  = h.id
+  GROUP BY p.id, p.email, p.username, p.created_at, u.last_sign_in_at
+) AS user_stats
 ORDER BY last_activity_date DESC NULLS LAST;
 
 
