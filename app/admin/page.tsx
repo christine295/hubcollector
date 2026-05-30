@@ -132,7 +132,7 @@ export default async function AdminPage({
     { data: blocks, count: totalBlocks },
   ] = await Promise.all([
     adminClient.auth.admin.listUsers({ perPage: 1000 }),
-    adminClient.from('profiles').select('id, username, email, display_name, created_at'),
+    adminClient.from('profiles').select('id, username, email, display_name, created_at, account_status'),
     adminClient.from('hubs').select('id, user_id'),
     adminClient.from('collections').select('id, user_id'),
     adminClient.from('content_blocks').select('id', { count: 'exact' }),
@@ -183,6 +183,7 @@ export default async function AdminPage({
     lastSignIn: u.last_sign_in_at,
     hubCount: hubCountMap.get(u.id) ?? 0,
     colCount: colCountMap.get(u.id) ?? 0,
+    accountStatus: (profileMap.get(u.id) as any)?.account_status ?? 'active',
   })).sort((a, b) => new Date(b.lastSignIn ?? 0).getTime() - new Date(a.lastSignIn ?? 0).getTime())
 
   // ── Tab nav ───────────────────────────────────────────────────────────────────
@@ -279,9 +280,20 @@ export default async function AdminPage({
                           <td className="px-5 py-3 text-gray-600">{u.colCount}</td>
                           <td className="px-5 py-3 text-gray-400">{fmt(u.lastSignIn)}</td>
                           <td className="px-5 py-3">
-                            <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${status.style}`}>
-                              {status.label}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {u.accountStatus !== 'active' && (
+                                <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                                  u.accountStatus === 'restricted' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                  u.accountStatus === 'suspended'  ? 'bg-red-50 text-red-700 border border-red-200' :
+                                  'bg-stone-100 text-stone-500 border border-stone-200'
+                                }`}>
+                                  {u.accountStatus}
+                                </span>
+                              )}
+                              <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${status.style}`}>
+                                {status.label}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-5 py-3">
                             <Link
