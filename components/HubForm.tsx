@@ -1189,6 +1189,7 @@ export default function HubForm({ hub, userId, username, initialCollectionId, in
 
         if (hubError) {
           if (hubError.code === '23505') setSlugError('That slug is already taken')
+          else if (hubError.code === '42501') setError('Your account has been restricted. Please contact support.')
           else setError(hubError.message)
           return
         }
